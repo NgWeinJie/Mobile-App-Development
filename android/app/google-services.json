@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "420055386320",
+    "project_id": "mobile-app-development-78ac2",
+    "storage_bucket": "mobile-app-development-78ac2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420055386320:android:867e5b39db2860547176d5",
+        "android_client_info": {
+          "package_name": "inti.edu.mobileappdevelopment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCaQSN5ehylYNRjn2GTVZYxWxpARMer7zA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
