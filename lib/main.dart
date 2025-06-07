@@ -7,6 +7,9 @@ import 'forgot_password_page.dart';
 import 'doctor/doctor_register_page.dart';
 import 'doctor/doctor_login_page.dart';
 import 'doctor/doctor_home_page.dart';
+import 'home_page.dart';
+import 'book_appointment_page.dart';
+import 'profile_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +38,9 @@ class MyApp extends StatelessWidget {
         '/doctor-register': (context) => const DoctorRegisterPage(),
         '/doctor-login': (context) => const DoctorLoginPage(),
         '/doctorHome': (context) => const DoctorHomePage(),
+        '/userHome': (context) => const UserHomePage(),
+        '/book-appointment': (context) => const BookAppointmentPage(),
+        '/profile': (context) => const ProfilePage(),
       },
       debugShowCheckedModeBanner: false,
     );
