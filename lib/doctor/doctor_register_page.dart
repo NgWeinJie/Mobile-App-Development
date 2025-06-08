@@ -106,6 +106,7 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
     final doctorId = doctorIdController.text.trim();
 
     try {
+      // Check if doctorId exists
       final existing = await FirebaseFirestore.instance
           .collection('doctors')
           .where('doctorId', isEqualTo: doctorId)
@@ -121,11 +122,39 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
         return;
       }
 
+      // Create Firebase Auth user
       final userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
       final imageUrl = await uploadImageToCloudinary(pickedImage!);
 
+      // Default weeklySessions data
+      final Map<String, dynamic> defaultWeeklySessions = {
+        "Monday": [
+          {"start": "08:00", "end": "13:00"},
+          {"start": "14:00", "end": "17:00"},
+        ],
+        "Tuesday": [
+          {"start": "08:00", "end": "13:00"},
+          {"start": "14:00", "end": "17:00"},
+        ],
+        "Wednesday": [
+          {"start": "08:00", "end": "13:00"},
+          {"start": "14:00", "end": "17:00"},
+        ],
+        "Thursday": [
+          {"start": "08:00", "end": "13:00"},
+          {"start": "14:00", "end": "17:00"},
+        ],
+        "Friday": [
+          {"start": "08:00", "end": "13:00"},
+          {"start": "14:00", "end": "17:00"},
+        ],
+        "Saturday": [],
+        "Sunday": [],
+      };
+
+      // Save doctor data with default weeklySessions
       await FirebaseFirestore.instance.collection('doctors').doc(userCredential.user!.uid).set({
         'doctorId': doctorId,
         'name': nameController.text.trim(),
@@ -134,6 +163,7 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
         'email': email,
         'phone': phoneController.text.trim(),
         'imageUrl': imageUrl,
+        'weeklySessions': defaultWeeklySessions,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -325,8 +355,6 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
                                 ),
                               ),
                             ),
-
-                            // Add login link here
                             const SizedBox(height: 20),
                             TextButton(
                               onPressed: () {
@@ -351,7 +379,6 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 30),
                           ],
                         ),

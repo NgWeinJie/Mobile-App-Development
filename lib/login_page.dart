@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
             backgroundColor: Colors.green,
           ),
         );
-        // TODO: Navigate to your home/dashboard screen here.
+        Navigator.pushReplacementNamed(context, '/userHome');
       }
     } on FirebaseAuthException catch (e) {
       String message = 'Login failed';
