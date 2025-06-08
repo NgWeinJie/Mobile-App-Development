@@ -9,6 +9,10 @@ class DoctorHomePage extends StatelessWidget {
     Navigator.pushReplacementNamed(context, '/doctor-login');
   }
 
+  void _goToProfile(BuildContext context) {
+    Navigator.pushNamed(context, '/doctor-profile');
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -20,6 +24,13 @@ class DoctorHomePage extends StatelessWidget {
         backgroundColor: const Color(0xFF2196F3),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () => _goToProfile(context),
+            tooltip: 'Profile',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
