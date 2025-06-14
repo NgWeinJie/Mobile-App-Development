@@ -10,7 +10,11 @@ import 'doctor/doctor_home_page.dart';
 import 'home_page.dart';
 import 'book_appointment_page.dart';
 import 'profile_page.dart';
+import 'hospitals_list_page.dart';
 import 'doctor/doctor_profile_page.dart';
+import 'home_care_page.dart';
+import 'booking_history_page.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +35,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      initialRoute: '/doctor-register',
+      initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
@@ -42,7 +46,10 @@ class MyApp extends StatelessWidget {
         '/userHome': (context) => const UserHomePage(),
         '/book-appointment': (context) => const BookAppointmentPage(),
         '/profile': (context) => const ProfilePage(),
+        '/hospitals': (context) => const HospitalsListPage(),
         '/doctor-profile': (context) => const DoctorProfilePage(),
+        '/home-care': (context) => const HomeCarePage(),
+        '/booking-history': (context) => const BookingHistoryPage(),
       },
       debugShowCheckedModeBanner: false,
     );

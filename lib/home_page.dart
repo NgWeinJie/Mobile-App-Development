@@ -62,39 +62,47 @@ class _UserHomePageState extends State<UserHomePage> {
           .get();
 
       // Count appointments per doctor
-      Map<String, Map<String, dynamic>> doctorCounts = {};
+      Map<String, int> doctorCounts = {};
 
       for (var doc in appointmentsSnapshot.docs) {
         final data = doc.data();
         final doctorId = data['doctorId'] as String?;
-        final doctorName = data['doctorName'] as String?;
-        final doctorSpecialization = data['doctorSpecialization'] as String?;
-        final doctorHospital = data['doctorHospital'] as String?;
-        final doctorImg = data['doctorimg'] as String?;
 
-        if (doctorId != null && doctorName != null) {
-          if (doctorCounts.containsKey(doctorId)) {
-            doctorCounts[doctorId]!['count']++;
-          } else {
-            doctorCounts[doctorId] = {
-              'doctorId': doctorId,
-              'name': doctorName,
-              'specialization': doctorSpecialization ?? 'General',
-              'hospital': doctorHospital ?? 'Hospital',
-              'imageUrl': doctorImg ?? '',
-              'count': 1,
-            };
-          }
+        if (doctorId != null) {
+          doctorCounts[doctorId] = (doctorCounts[doctorId] ?? 0) + 1;
         }
       }
 
-      // Sort doctors by appointment count and get top 3
-      final sortedDoctors = doctorCounts.values.toList()
-        ..sort((a, b) => b['count'].compareTo(a['count']));
+      // Sort doctors by appointment count
+      final sortedDoctorIds = doctorCounts.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+
+      // Get top 3 doctor IDs
+      final topDoctorIds = sortedDoctorIds.take(3).map((e) => e.key).toList();
+
+      // Fetch complete doctor data from doctors collection
+      List<Map<String, dynamic>> doctorsData = [];
+
+      for (String doctorId in topDoctorIds) {
+        try {
+          final doctorDoc = await FirebaseFirestore.instance
+              .collection('doctors')
+              .doc(doctorId)
+              .get();
+
+          if (doctorDoc.exists) {
+            final doctorData = doctorDoc.data() as Map<String, dynamic>;
+            doctorData['doctorId'] = doctorId;
+            doctorsData.add(doctorData);
+          }
+        } catch (e) {
+          debugPrint('Error fetching doctor $doctorId: $e');
+        }
+      }
 
       if (mounted) {
         setState(() {
-          popularDoctors = sortedDoctors.take(3).toList();
+          popularDoctors = doctorsData;
           isLoading = false;
         });
       }
@@ -128,7 +136,8 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   // Toggle favorite status
-  Future<void> _toggleFavorite(String doctorId, String doctorName, Map<String, dynamic> doctorData) async {
+  Future<void> _toggleFavorite(String doctorId, String doctorName,
+      Map<String, dynamic> doctorData) async {
     final user = _auth.currentUser;
     if (user == null) {
       if (mounted) {
@@ -200,14 +209,16 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   // Navigate to select date time page
-  void _navigateToSelectDateTime(String doctorId, Map<String, dynamic> doctorData) {
+  void _navigateToSelectDateTime(String doctorId,
+      Map<String, dynamic> doctorData) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SelectDateTimePage(
-          doctorId: doctorId,
-          doctorData: doctorData,
-        ),
+        builder: (context) =>
+            SelectDateTimePage(
+              doctorId: doctorId,
+              doctorData: doctorData,
+            ),
       ),
     );
   }
@@ -229,7 +240,8 @@ class _UserHomePageState extends State<UserHomePage> {
                 children: [
                   Text(
                     "Hi, ${userLastName.isNotEmpty ? userLastName : 'User'}",
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.w500),
                   ),
                   Row(
                     children: [
@@ -240,7 +252,8 @@ class _UserHomePageState extends State<UserHomePage> {
                         child: const CircleAvatar(
                           radius: 24,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.notifications_none, color: Colors.blue, size: 28),
+                          child: Icon(Icons.notifications_none, color: Colors
+                              .blue, size: 28),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -251,7 +264,8 @@ class _UserHomePageState extends State<UserHomePage> {
                         child: const CircleAvatar(
                           radius: 24,
                           backgroundColor: Colors.red,
-                          child: Icon(Icons.logout, color: Colors.white, size: 20),
+                          child: Icon(Icons.logout, color: Colors.white,
+                              size: 20),
                         ),
                       ),
                     ],
@@ -302,10 +316,16 @@ class _UserHomePageState extends State<UserHomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCategory(context, Icons.calendar_month, "Booking\nAppointment", Colors.blue),
-                  _buildCategory(context, Icons.history, "Appointment\nHistory", Colors.green),
-                  _buildCategory(context, Icons.medical_information, "Medical\nRecord", Colors.purple),
-                  _buildCategory(context, Icons.home_work, "HomeCare\nServices", Colors.orange),
+                  _buildCategory(
+                      context, Icons.calendar_month, "Booking\nAppointment",
+                      Colors.blue),
+                  _buildCategory(context, Icons.history, "Appointment\nHistory",
+                      Colors.green),
+                  _buildCategory(
+                      context, Icons.medical_information, "Medical\nRecord",
+                      Colors.purple),
+                  _buildCategory(context, Icons.home_work, "HomeCare\nServices",
+                      Colors.orange),
                 ],
               ),
               const SizedBox(height: 20),
@@ -314,10 +334,17 @@ class _UserHomePageState extends State<UserHomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCategory(context, Icons.person_search, "View Doctor\nProfile", Colors.teal),
-                  _buildCategory(context, Icons.local_hospital, "List of\nHospitals", Colors.red),
-                  _buildCategory(context, Icons.account_circle, "User\nProfile", Colors.indigo),
-                  _buildCategory(context, Icons.feedback, "Feedback/\nContact Us", Colors.amber),
+                  _buildCategory(
+                      context, Icons.person_search, "HomeCare\nHistory",
+                      Colors.teal),
+                  _buildCategory(
+                      context, Icons.local_hospital, "List of\nHospitals",
+                      Colors.red),
+                  _buildCategory(context, Icons.account_circle, "User\nProfile",
+                      Colors.indigo),
+                  _buildCategory(
+                      context, Icons.feedback, "Feedback/\nContact Us",
+                      Colors.amber),
                 ],
               ),
               const SizedBox(height: 25),
@@ -392,35 +419,37 @@ class _UserHomePageState extends State<UserHomePage> {
                     child: CircularProgressIndicator(),
                   ),
                 )
-              else if (popularDoctors.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'No popular doctors found',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
+              else
+                if (popularDoctors.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'No popular doctors found',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              else
-                ...popularDoctors.map((doctor) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildDoctorCard(doctor['doctorId'], doctor),
-                )),
+                  )
+                else
+                  ...popularDoctors.map((doctor) =>
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildDoctorCard(doctor['doctorId'], doctor),
+                      )),
 
               const SizedBox(height: 80), // Extra space for bottom navigation
             ],
@@ -476,7 +505,8 @@ class _UserHomePageState extends State<UserHomePage> {
               case 1:
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AppointmentHistoryPage()),
+                  MaterialPageRoute(
+                      builder: (context) => const AppointmentHistoryPage()),
                 );
                 break;
               case 2:
@@ -499,25 +529,30 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  Widget _buildCategory(BuildContext context, IconData icon, String title, Color color) {
+  Widget _buildCategory(BuildContext context, IconData icon, String title,
+      Color color) {
     return GestureDetector(
       onTap: () {
         // Handle navigation based on title
-        if (title.contains("Booking")) {
+        if (title.contains("Booking\nAppointment")) {
           Navigator.pushNamed(context, '/book-appointment');
-        } else if (title.contains("History")) {
+        } else if (title.contains("Appointment\nHistory")) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AppointmentHistoryPage()),
+            MaterialPageRoute(
+                builder: (context) => const AppointmentHistoryPage()),
           );
         } else if (title.contains("Medical")) {
           // Navigate to medical records
-        } else if (title.contains("HomeCare")) {
-          // Navigate to nurse services -> QR Payment
-        } else if (title.contains("Doctor")) {
-          // Navigate to doctor profiles
+        } else if (title.contains("HomeCare\nServices")) {
+          // Navigate to nurse services
+          Navigator.pushNamed(context, '/home-care');
+        } else if (title.contains("HomeCare\nHistory")) {
+          // Navigate to booking history
+          Navigator.pushNamed(context, '/booking-history');
         } else if (title.contains("Hospital")) {
           // Navigate to hospital list
+          Navigator.pushNamed(context, '/hospitals');
         } else if (title.contains("Profile")) {
           // Navigate to user profile
           Navigator.pushNamed(context, '/profile');
@@ -525,7 +560,8 @@ class _UserHomePageState extends State<UserHomePage> {
           // Navigate to feedback/contact us
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ContactFeedbackPage()),
+            MaterialPageRoute(
+                builder: (context) => const ContactFeedbackPage()),
           );
         }
       },
@@ -677,12 +713,14 @@ class _UserHomePageState extends State<UserHomePage> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isFavorite ? Colors.red.shade50 : Colors.grey.shade50,
+                        color: isFavorite ? Colors.red.shade50 : Colors.grey
+                            .shade50,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Colors.red.shade400 : Colors.grey.shade400,
+                        color: isFavorite ? Colors.red.shade400 : Colors.grey
+                            .shade400,
                         size: 20,
                       ),
                     ),

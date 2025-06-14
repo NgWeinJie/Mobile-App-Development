@@ -94,7 +94,7 @@ class EmergencyServicePage extends StatelessWidget {
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
-                        "Tap on phone numbers or call buttons to make direct calls",
+                        "Tap phone numbers to call or navigation icon to get directions",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -129,6 +129,7 @@ class EmergencyServicePage extends StatelessWidget {
                       "+604 118 5181",
                       "Penang, Malaysia",
                       Colors.blue,
+                      "Hospital Lam Wah Ee, Penang, Malaysia",
                     ),
                     const SizedBox(height: 16),
                     _buildEmergencyCard(
@@ -138,6 +139,7 @@ class EmergencyServicePage extends StatelessWidget {
                       "+604 188 1425",
                       "Penang, Malaysia",
                       Colors.green,
+                      "Gleneagles Hospital Penang, Malaysia",
                     ),
                     const SizedBox(height: 16),
                     _buildEmergencyCard(
@@ -147,6 +149,7 @@ class EmergencyServicePage extends StatelessWidget {
                       "+604 518 9111",
                       "Penang, Malaysia",
                       Colors.purple,
+                      "Island Hospital Penang, Malaysia",
                     ),
                     const SizedBox(height: 16),
                     _buildEmergencyCard(
@@ -156,15 +159,17 @@ class EmergencyServicePage extends StatelessWidget {
                       "+604 741 9421",
                       "Penang, Malaysia",
                       Colors.purple,
+                      "Pantai Hospital Penang, Malaysia",
                     ),
                     const SizedBox(height: 16),
                     _buildEmergencyCard(
                       context,
-                      "Northern Heart Hospital Penang",
+                      "Penang Adventist Hospital",
                       "Ambulance / Emergency",
                       "+604 242 4252",
                       "Penang, Malaysia",
                       Colors.purple,
+                      "Penang Adventist Hospital, Malaysia",
                     ),
                     const SizedBox(height: 16),
 
@@ -188,6 +193,7 @@ class EmergencyServicePage extends StatelessWidget {
       String phoneNumber,
       String location,
       Color accentColor,
+      String navigationQuery,
       ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -258,7 +264,7 @@ class EmergencyServicePage extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Phone Number and Call Button
+          // Phone Number and Action Buttons
           Row(
             children: [
               Expanded(
@@ -284,6 +290,8 @@ class EmergencyServicePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
+
+              // Call Button
               GestureDetector(
                 onTap: () => _makePhoneCall(phoneNumber),
                 child: Container(
@@ -301,6 +309,32 @@ class EmergencyServicePage extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.phone,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Navigation Button
+              GestureDetector(
+                onTap: () => _openNavigation(navigationQuery),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.directions,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -411,6 +445,28 @@ class EmergencyServicePage extends StatelessWidget {
       }
     } catch (e) {
       print('Error launching phone call: $e');
+    }
+  }
+
+  // Open Navigation Function
+  Future<void> _openNavigation(String destination) async {
+    final String encodedDestination = Uri.encodeComponent(destination);
+    final Uri googleMapsUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedDestination');
+
+    try {
+      if (await canLaunchUrl(googleMapsUri)) {
+        await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback to generic maps URL
+        final Uri fallbackUri = Uri.parse('geo:0,0?q=$encodedDestination');
+        if (await canLaunchUrl(fallbackUri)) {
+          await launchUrl(fallbackUri);
+        } else {
+          print('Could not launch navigation to $destination');
+        }
+      }
+    } catch (e) {
+      print('Error launching navigation: $e');
     }
   }
 }
