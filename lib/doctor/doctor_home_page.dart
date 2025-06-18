@@ -86,6 +86,7 @@ class DoctorHomePage extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Logout button
                   Row(
@@ -129,6 +130,18 @@ class DoctorHomePage extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
+                  // Category label
+                  const Text(
+                    'Category',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Feature cards
                   GridView.count(
                     physics: const NeverScrollableScrollPhysics(),
@@ -163,6 +176,63 @@ class DoctorHomePage extends StatelessWidget {
                         onTap: () => _goToNews(context),
                       ),
                     ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Category label
+                  const Text(
+                    'Upcoming Appointments',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  FutureBuilder<QuerySnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('appointments')
+                        .where('doctorId', isEqualTo: user.uid)
+                        .where('status', isEqualTo: 'pending')
+                        .orderBy('appointmentDate') // make sure this is stored as a string like '2025-06-17'
+                        .limit(3)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Text('No upcoming appointments.',
+                            style: TextStyle(fontSize: 16, color: Colors.black54));
+                      }
+
+                      final appointments = snapshot.data!.docs;
+
+                      return Column(
+                        children: appointments.map((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final patient = data['patientDetails'] ?? {};
+                          return Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              leading: const Icon(Icons.calendar_today, color: Colors.blue),
+                              title: Text(patient['name'] ?? 'Unknown'),
+                              subtitle: Text(
+                                '${data['appointmentDate']} at ${data['timeSlot']}',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
               ),
