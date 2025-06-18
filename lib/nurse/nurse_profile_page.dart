@@ -1,31 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'doctor_workday_page.dart';
 
-class DoctorProfilePage extends StatefulWidget {
-  const DoctorProfilePage({super.key});
+class NurseProfilePage extends StatefulWidget {
+  const NurseProfilePage({super.key});
 
   @override
-  State<DoctorProfilePage> createState() => _DoctorProfilePageState();
+  State<NurseProfilePage> createState() => _NurseProfilePageState();
 }
 
-class _DoctorProfilePageState extends State<DoctorProfilePage> {
-  Map<String, dynamic>? doctor;
+class _NurseProfilePageState extends State<NurseProfilePage> {
+  Map<String, dynamic>? nurse;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchDoctorData();
+    fetchNurseData();
   }
 
-  Future<void> fetchDoctorData() async {
+  Future<void> fetchNurseData() async {
     final user = FirebaseAuth.instance.currentUser;
-    final doc = await FirebaseFirestore.instance.collection('doctors').doc(user!.uid).get();
+    final doc = await FirebaseFirestore.instance.collection('nurses').doc(user!.uid).get();
     if (doc.exists) {
       setState(() {
-        doctor = doc.data()!;
+        nurse = doc.data()!;
         isLoading = false;
       });
     } else {
@@ -34,9 +33,9 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   }
 
   Future<void> showEditDialog() async {
-    final nameController = TextEditingController(text: doctor?['name']);
-    final emailController = TextEditingController(text: doctor?['email']);
-    final phoneController = TextEditingController(text: doctor?['phone']);
+    final nameController = TextEditingController(text: nurse?['name']);
+    final emailController = TextEditingController(text: nurse?['email']);
+    final phoneController = TextEditingController(text: nurse?['phone']);
 
     await showDialog(
       context: context,
@@ -72,7 +71,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               final user = FirebaseAuth.instance.currentUser;
 
               try {
-                await FirebaseFirestore.instance.collection('doctors').doc(user!.uid).update({
+                await FirebaseFirestore.instance.collection('nurses').doc(user!.uid).update({
                   'name': nameController.text.trim(),
                   'email': emailController.text.trim(),
                   'phone': phoneController.text.trim(),
@@ -83,7 +82,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 }
 
                 Navigator.pop(context);
-                await fetchDoctorData(); // refresh view
+                await fetchNurseData();
               } catch (e) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -116,105 +115,67 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       backgroundColor: const Color(0xFFF5F9FF),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : doctor == null
-          ? const Center(child: Text('Doctor data not found.'))
+          : nurse == null
+          ? const Center(child: Text('Nurse data not found.'))
           : SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Top row with back and edit buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.black87),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(context); // Back to Nurse Home Page
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.black87),
-                    onPressed: showEditDialog,
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: nurse == null ? null : showEditDialog,
+                    tooltip: 'Edit Profile',
                   ),
                 ],
               ),
-
-              const SizedBox(height: 8),
 
               // Profile picture
               Center(
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundImage: doctor!['imageUrl'] != null &&
-                      doctor!['imageUrl'].toString().isNotEmpty
-                      ? NetworkImage(doctor!['imageUrl'])
+                  backgroundImage: nurse!['imageUrl'] != null && nurse!['imageUrl'].toString().isNotEmpty
+                      ? NetworkImage(nurse!['imageUrl'])
                       : const AssetImage('assets/default_profile.png') as ImageProvider,
                   backgroundColor: Colors.grey.shade200,
                 ),
               ),
-
               const SizedBox(height: 16),
 
-              // Name
+              // Name & specialization
               Center(
                 child: Column(
                   children: [
                     Text(
-                      doctor!['name'] ?? 'Doctor Name',
+                      nurse!['name'] ?? 'Nurse Name',
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      doctor!['specialization'] ?? '',
+                      nurse!['specialization'] ?? '',
                       style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
 
               // Info tiles
-              _buildInfoTile('Doctor ID', doctor!['doctorId'], Icons.badge),
-              _buildInfoTile('Email', doctor!['email'], Icons.email),
-              _buildInfoTile('Phone', doctor!['phone'], Icons.phone),
-              _buildInfoTile('Hospital', doctor!['hospital'], Icons.local_hospital),
-              _buildInfoTile('Specialization', doctor!['specialization'], Icons.medical_services),
-
-              const SizedBox(height: 24),
-
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      final updatedDoc = await FirebaseFirestore.instance
-                          .collection('doctors')
-                          .doc(user.uid)
-                          .get();
-                      final updatedData = updatedDoc.data();
-                      if (updatedData != null &&
-                          updatedData.containsKey('weeklySessions')) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DoctorWorkdayPage(
-                              weeklySessions: Map<String, dynamic>.from(
-                                  updatedData['weeklySessions']),
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.calendar_today),
-                  label: const Text('Workday'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[100],
-                  ),
-                ),
-              ),
+              _buildInfoTile('Nurse ID', nurse!['nurseId'], Icons.badge),
+              _buildInfoTile('Email', nurse!['email'], Icons.email),
+              _buildInfoTile('Phone', nurse!['phone'], Icons.phone),
+              _buildInfoTile('Specialization', nurse!['specialization'], Icons.medical_services),
             ],
           ),
         ),

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mobile_app_development/nurse/nurse_home_page.dart';
+import 'package:mobile_app_development/nurse/nurse_login_page.dart';
+import 'package:mobile_app_development/nurse/nurse_register_page.dart';
 import 'firebase_options.dart';
+import 'nurse/nurse_profile_page.dart';
 import 'register_page.dart';
 import 'login_page.dart';
 import 'forgot_password_page.dart';
@@ -11,6 +15,8 @@ import 'home_page.dart';
 import 'book_appointment_page.dart';
 import 'profile_page.dart';
 import 'doctor/doctor_profile_page.dart';
+import 'doctor/doctor_news_page.dart';
+import 'doctor/doctor_schedule_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +49,12 @@ class MyApp extends StatelessWidget {
         '/book-appointment': (context) => const BookAppointmentPage(),
         '/profile': (context) => const ProfilePage(),
         '/doctor-profile': (context) => const DoctorProfilePage(),
+        '/nurse-register': (context) => const NurseRegisterPage(),
+        '/nurse-login': (context) => const NurseLoginPage(),
+        '/nurseHome': (context) => const NurseHomePage(),
+        '/nurse-profile': (context) => const NurseProfilePage(),
+        '/doctor-news': (context) => const DoctorNewsPage(),
+        '/doctor-schedule': (context) => const DoctorSchedulePage(),
       },
       debugShowCheckedModeBanner: false,
     );

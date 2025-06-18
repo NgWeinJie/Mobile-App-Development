@@ -45,7 +45,6 @@ class _DoctorWorkdayPageState extends State<DoctorWorkdayPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // Convert _controllers into a valid Firestore data format
     Map<String, dynamic> updatedSessions = {};
 
     for (var day in daysOfWeek) {
@@ -80,64 +79,97 @@ class _DoctorWorkdayPageState extends State<DoctorWorkdayPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Weekly Schedule'),
-        backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveToFirestore,
-            tooltip: 'Save',
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: daysOfWeek.length,
-        itemBuilder: (context, index) {
-          final day = daysOfWeek[index];
-          final sessionControllers = _controllers[day]!;
-
-          return Card(
-            margin: const EdgeInsets.all(8),
-            child: ExpansionTile(
-              title: Text(
-                day,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              children: sessionControllers.isNotEmpty
-                  ? sessionControllers.asMap().entries.map((entry) {
-                final i = entry.key;
-                final session = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: session['start'],
-                          decoration: const InputDecoration(labelText: 'Start Time'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: session['end'],
-                          decoration: const InputDecoration(labelText: 'End Time'),
-                        ),
-                      ),
-                    ],
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top bar with back and save buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                   ),
-                );
-              }).toList()
-                  : const [
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No sessions available.'),
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.save, color: Colors.blueAccent),
+                    onPressed: _saveToFirestore,
+                    tooltip: 'Save',
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+
+            // Title below the top bar
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Text(
+                'Weekly Schedule',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Schedule List
+            Expanded(
+              child: ListView.builder(
+                itemCount: daysOfWeek.length,
+                itemBuilder: (context, index) {
+                  final day = daysOfWeek[index];
+                  final sessionControllers = _controllers[day]!;
+
+                  return Card(
+                    margin: const EdgeInsets.all(8),
+                    child: ExpansionTile(
+                      title: Text(
+                        day,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      children: sessionControllers.isNotEmpty
+                          ? sessionControllers.asMap().entries.map((entry) {
+                        final session = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: session['start'],
+                                  decoration: const InputDecoration(labelText: 'Start Time'),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  controller: session['end'],
+                                  decoration: const InputDecoration(labelText: 'End Time'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList()
+                          : const [
+                        Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('No sessions available.'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

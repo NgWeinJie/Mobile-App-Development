@@ -1,25 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DoctorHomePage extends StatelessWidget {
-  const DoctorHomePage({super.key});
+class NurseHomePage extends StatelessWidget {
+  const NurseHomePage({super.key});
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    Navigator.pushReplacementNamed(context, '/doctor-login');
+    Navigator.pushReplacementNamed(context, '/nurse-login');
   }
 
   void _goToProfile(BuildContext context) {
-    Navigator.pushNamed(context, '/doctor-profile');
+    Navigator.pushNamed(context, '/nurse-profile');
   }
 
   void _goToSchedule(BuildContext context) {
-    Navigator.pushNamed(context, '/doctor-schedule');
+    Navigator.pushNamed(context, '/nurse-schedule');
   }
 
   void _goToMedicalRecord(BuildContext context) {
-    Navigator.pushNamed(context, '/doctor-medical-records');
+    Navigator.pushNamed(context, '/nurse-medical-records');
   }
 
   void _goToNews(BuildContext context) {
@@ -64,9 +64,9 @@ class DoctorHomePage extends StatelessWidget {
     );
   }
 
-  Future<String> _fetchDoctorName(String uid) async {
-    final doc = await FirebaseFirestore.instance.collection('doctors').doc(uid).get();
-    return doc.data()?['name'] ?? 'Doctor';
+  Future<String> _fetchNurseName(String uid) async {
+    final doc = await FirebaseFirestore.instance.collection('nurses').doc(uid).get();
+    return doc.data()?['name'] ?? 'Nurse';
   }
 
   @override
@@ -78,16 +78,16 @@ class DoctorHomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F9FF),
       body: FutureBuilder<String>(
-        future: _fetchDoctorName(user!.uid),
+        future: _fetchNurseName(user!.uid),
         builder: (context, snapshot) {
-          final doctorName = snapshot.data ?? 'Doctor';
+          final nurseName = snapshot.data ?? 'Nurse';
 
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  // Logout button
+                  // Logout button top-right
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -116,7 +116,7 @@ class DoctorHomePage extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          'Welcome, $doctorName',
+                          'Welcome, $nurseName',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
