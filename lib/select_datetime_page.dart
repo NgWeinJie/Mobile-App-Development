@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'patient_details_page.dart'; // Import the patient details page
+import 'patient_details_page.dart';
 
 class SelectDateTimePage extends StatefulWidget {
   final String doctorId;

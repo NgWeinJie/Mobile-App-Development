@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_page.dart';
-import 'select_datetime_page.dart';
-import 'view_doctor_profile.dart';
+import 'home_care_booking_page.dart';
 
-class BookAppointmentPage extends StatefulWidget {
-  const BookAppointmentPage({super.key});
+class HomeCarePage extends StatefulWidget {
+  const HomeCarePage({super.key});
 
   @override
-  State<BookAppointmentPage> createState() => _BookAppointmentPageState();
+  State<HomeCarePage> createState() => _HomeCarePageState();
 }
 
-class _BookAppointmentPageState extends State<BookAppointmentPage> {
+class _HomeCarePageState extends State<HomeCarePage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedSpecialization = 'All';
   String _selectedHospital = 'All';
@@ -22,11 +21,10 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
 
   final List<String> _specializations = [
     'All',
-    'Cardiology',
-    'Paediatrics',
-    'Dermatology',
-    'Otorhinolaryngology',
-    'General Surgery',
+    'Gerontology',
+    'Psychiatric',
+    'Dietician',
+    'Pediatrics',
   ];
 
   final List<String> _hospitals = [
@@ -44,8 +42,8 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
     super.dispose();
   }
 
-  // Check if doctor is in user's favorites
-  Future<bool> _isFavorite(String doctorId) async {
+  // Check if nurse is in user's favorites
+  Future<bool> _isFavorite(String nurseId) async {
     final user = _auth.currentUser;
     if (user == null) return false;
 
@@ -53,8 +51,8 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
       final doc = await _firestore
           .collection('favorites')
           .doc(user.uid)
-          .collection('doctors')
-          .doc(doctorId)
+          .collection('nurses')
+          .doc(nurseId)
           .get();
       return doc.exists;
     } catch (e) {
@@ -64,7 +62,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
   }
 
   // Toggle favorite status
-  Future<void> _toggleFavorite(String doctorId, String doctorName, Map<String, dynamic> doctorData) async {
+  Future<void> _toggleFavorite(String nurseId, String nurseName, Map<String, dynamic> nurseData) async {
     final user = _auth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,8 +78,8 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
       final favoriteRef = _firestore
           .collection('favorites')
           .doc(user.uid)
-          .collection('doctors')
-          .doc(doctorId);
+          .collection('nurses')
+          .doc(nurseId);
 
       final doc = await favoriteRef.get();
 
@@ -90,23 +88,25 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
         await favoriteRef.delete();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Removed $doctorName from favorites'),
+            content: Text('Removed $nurseName from favorites'),
             duration: const Duration(seconds: 2),
           ),
         );
       } else {
         // Add to favorites
         await favoriteRef.set({
-          'doctorId': doctorId,
-          'name': doctorName,
-          'specialization': doctorData['specialization'] ?? '',
-          'hospital': doctorData['hospital'] ?? '',
-          'imageUrl': doctorData['imageUrl'] ?? '',
+          'nurseId': nurseId,
+          'name': nurseName,
+          'specialization': nurseData['specialization'] ?? '',
+          'hospital': nurseData['hospital'] ?? '',
+          'imageUrl': nurseData['imageUrl'] ?? '',
+          'price': nurseData['price'] ?? 0,
+          'phone': nurseData['phone'] ?? '',
           'addedAt': FieldValue.serverTimestamp(),
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added $doctorName to favorites'),
+            content: Text('Added $nurseName to favorites'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -125,27 +125,13 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
     }
   }
 
-  // Navigate to select date time page
-  void _navigateToSelectDateTime(String doctorId, Map<String, dynamic> doctorData) {
+  void _navigateToHomeCareBooking(String nurseId, Map<String, dynamic> nurseData) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SelectDateTimePage(
-          doctorId: doctorId,
-          doctorData: doctorData,
-        ),
-      ),
-    );
-  }
-
-  // Navigate to doctor profile page
-  void _navigateToViewProfile(String doctorId, Map<String, dynamic> doctorData) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ViewDoctorProfilePage(
-          doctorId: doctorId,
-          doctorData: doctorData,
+        builder: (context) => HomeCareBookingPage(
+          nurseId: nurseId,
+          nurseData: nurseData,
         ),
       ),
     );
@@ -168,7 +154,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
           child: const Icon(Icons.arrow_back_ios, color: Colors.black),
         ),
         title: const Text(
-          'Appointment',
+          'Homecare',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -202,7 +188,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search',
+                  hintText: 'Search nurses...',
                   hintStyle: TextStyle(color: Colors.grey.shade400),
                   prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -318,10 +304,10 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
 
           const SizedBox(height: 16),
 
-          // Doctors List
+          // Nurses List
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('doctors').snapshots(),
+              stream: FirebaseFirestore.instance.collection('nurses').snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return const Center(
@@ -335,7 +321,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                   );
                 }
 
-                final doctors = snapshot.data!.docs.where((doc) {
+                final nurses = snapshot.data!.docs.where((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   final name = (data['name'] ?? '').toString().toLowerCase();
                   final specialization = (data['specialization'] ?? '').toString();
@@ -356,10 +342,10 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                   return matchesSearch && matchesSpecialization && matchesHospital;
                 }).toList();
 
-                if (doctors.isEmpty) {
+                if (nurses.isEmpty) {
                   return const Center(
                     child: Text(
-                      'No doctors found',
+                      'No nurses found',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
@@ -370,11 +356,11 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: doctors.length,
+                  itemCount: nurses.length,
                   itemBuilder: (context, index) {
-                    final doctorDoc = doctors[index];
-                    final doctor = doctorDoc.data() as Map<String, dynamic>;
-                    return _buildDoctorCard(doctorDoc.id, doctor);
+                    final nurseDoc = nurses[index];
+                    final nurse = nurseDoc.data() as Map<String, dynamic>;
+                    return _buildNurseCard(nurseDoc.id, nurse);
                   },
                 );
               },
@@ -400,7 +386,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
           unselectedItemColor: Colors.grey,
           selectedFontSize: 12,
           unselectedFontSize: 12,
-          currentIndex: 1, // Appointments tab selected
+          currentIndex: 4, // More tab selected (assuming homecare is under "More")
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -433,13 +419,16 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                 );
                 break;
               case 1:
-              // Already on appointments page
+              // Navigate to appointments
                 break;
               case 2:
-              // Navigate to chat
+              // Navigate to records
                 break;
               case 3:
               // Navigate to profile
+                break;
+              case 4:
+              // Already on homecare/more page
                 break;
             }
           },
@@ -448,203 +437,181 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
     );
   }
 
-  Widget _buildDoctorCard(String doctorId, Map<String, dynamic> doctor) {
-    final name = doctor['name'] ?? 'Unknown Doctor';
-    final specialization = doctor['specialization'] ?? 'General';
-    final hospital = doctor['hospital'] ?? 'Unknown Hospital';
-    final imageUrl = doctor['imageUrl'] ?? '';
+  Widget _buildNurseCard(String nurseId, Map<String, dynamic> nurse) {
+    final name = nurse['name'] ?? 'Unknown Nurse';
+    final specialization = nurse['specialization'] ?? 'General';
+    final hospital = nurse['hospital'] ?? 'Unknown Hospital';
+    final imageUrl = nurse['imageUrl'] ?? '';
+    final price = nurse['price'] ?? 0;
+    final phone = nurse['phone'] ?? '';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                // Doctor Image
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey.shade200,
-                  ),
-                  child: imageUrl.isNotEmpty
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Colors.grey.shade400,
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.blue.shade300,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                      : Icon(
-                    Icons.person,
-                    size: 30,
-                    color: Colors.grey.shade400,
-                  ),
+    return GestureDetector(
+      onTap: () => _navigateToHomeCareBooking(nurseId, nurse),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Nurse Image
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade200,
                 ),
-                const SizedBox(width: 16),
+                child: imageUrl.isNotEmpty
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.local_hospital,
+                        size: 30,
+                        color: Colors.grey.shade400,
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.blue.shade300,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                )
+                    : Icon(
+                  Icons.local_hospital,
+                  size: 30,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              const SizedBox(width: 16),
 
-                // Doctor Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+              // Nurse Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Specialist $specialization',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Price
+                    Text(
+                      'RM $price/day',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Hospital name with location icon
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: Colors.blue.shade400,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            hospital,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Phone number
+                    if (phone.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        'Specialist $specialization',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Hospital name with location icon
                       Row(
                         children: [
                           Icon(
-                            Icons.location_on,
+                            Icons.phone,
                             size: 16,
                             color: Colors.blue.shade400,
                           ),
                           const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              hospital,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            phone,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
                             ),
                           ),
                         ],
                       ),
                     ],
-                  ),
+                  ],
                 ),
+              ),
 
-                const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
-                // Dynamic Favorite Button
-                FutureBuilder<bool>(
-                  future: _isFavorite(doctorId),
-                  builder: (context, snapshot) {
-                    final isFavorite = snapshot.data ?? false;
+              // Dynamic Favorite Button
+              FutureBuilder<bool>(
+                future: _isFavorite(nurseId),
+                builder: (context, snapshot) {
+                  final isFavorite = snapshot.data ?? false;
 
-                    return GestureDetector(
-                      onTap: () => _toggleFavorite(doctorId, name, doctor),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isFavorite ? Colors.red.shade50 : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? Colors.red.shade400 : Colors.grey.shade400,
-                          size: 20,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Action Buttons
-            Row(
-              children: [
-                // View Profile Button
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _navigateToViewProfile(doctorId, doctor),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                      side: const BorderSide(color: Colors.blue),
-                      shape: RoundedRectangleBorder(
+                  return GestureDetector(
+                    onTap: () => _toggleFavorite(nurseId, name, nurse),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isFavorite ? Colors.red.shade50 : Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text(
-                      'View Profile',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      child: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red.shade400 : Colors.grey.shade400,
+                        size: 20,
                       ),
                     ),
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // Book Appointment Button
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _navigateToSelectDateTime(doctorId, doctor),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Book Appointment',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
