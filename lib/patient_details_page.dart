@@ -304,7 +304,7 @@ class _PatientDetailsPageState extends State<PatientDetailsPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'You booked an appointment with Dr. ${widget.doctorData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} at ${widget.selectedTimeSlot}',
+                  'You booked an appointment with ${widget.doctorData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} at ${widget.selectedTimeSlot}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,

@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'home_page.dart';
+import 'favorites_page.dart';
+import 'profile_page.dart';
+import 'appointment_history_page.dart';
 
 class HospitalsListPage extends StatefulWidget {
   const HospitalsListPage({super.key});
@@ -342,31 +345,46 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
               label: 'Records',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           onTap: (index) {
             // Handle navigation based on index
             switch (index) {
               case 0:
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const UserHomePage()),
                 );
                 break;
               case 1:
-              // Navigate to appointments
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AppointmentHistoryPage()),
+                );
                 break;
               case 2:
-              // Navigate to records
+              // Navigate to Medical Records
                 break;
               case 3:
-              // Navigate to profile
+              // Navigate to Favorites
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
+                );
+                break;
+              case 4:
+              // Navigate to Profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
                 break;
             }
           },

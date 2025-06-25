@@ -6,7 +6,8 @@ import 'emergency_service_page.dart';
 import 'select_datetime_page.dart';
 import 'profile_page.dart';
 import 'contact_feedback_page.dart';
-
+import 'book_appointment_page.dart';
+import 'favorites_page.dart';
 
 class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key});
@@ -18,15 +19,25 @@ class UserHomePage extends StatefulWidget {
 class _UserHomePageState extends State<UserHomePage> {
   String userLastName = '';
   List<Map<String, dynamic>> popularDoctors = [];
+  List<Map<String, dynamic>> searchResults = [];
   bool isLoading = true;
+  bool isSearching = false;
+  bool showSearchResults = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _loadPopularDoctors();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -114,6 +125,65 @@ class _UserHomePageState extends State<UserHomePage> {
         });
       }
     }
+  }
+
+  // Search doctors function - Modified to search only by doctor name
+  Future<void> _searchDoctors(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        showSearchResults = false;
+        searchResults = [];
+        isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      isSearching = true;
+      showSearchResults = true;
+    });
+
+    try {
+      final doctorsSnapshot = await _firestore.collection('doctors').get();
+
+      final results = doctorsSnapshot.docs.where((doc) {
+        final data = doc.data();
+        final name = (data['name'] ?? '').toString().toLowerCase();
+        final searchQuery = query.toLowerCase();
+
+        // Only search by doctor name
+        return name.contains(searchQuery);
+      }).map((doc) {
+        final data = doc.data();
+        data['doctorId'] = doc.id;
+        return data;
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          searchResults = results;
+          isSearching = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error searching doctors: $e');
+      if (mounted) {
+        setState(() {
+          isSearching = false;
+          searchResults = [];
+        });
+      }
+    }
+  }
+
+  // Clear search
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      showSearchResults = false;
+      searchResults = [];
+      isSearching = false;
+    });
   }
 
   // Check if doctor is in user's favorites
@@ -223,6 +293,70 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
+  // Logout function
+  Future<void> _logout() async {
+    try {
+      // Show confirmation dialog
+      final bool? shouldLogout = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to logout?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                child: const Text('Logout'),
+              ),
+            ],
+          );
+        },
+      );
+
+      // If user confirmed logout
+      if (shouldLogout == true) {
+        // Sign out from Firebase
+        await _auth.signOut();
+
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged out successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          // Navigate to login page and clear all previous routes
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/login',
+                (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error during logout: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error occurred during logout'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -258,9 +392,7 @@ class _UserHomePageState extends State<UserHomePage> {
                       ),
                       const SizedBox(width: 10),
                       GestureDetector(
-                        onTap: () {
-                          // Logout functionality
-                        },
+                        onTap: _logout, // Call the logout function
                         child: const CircleAvatar(
                           radius: 24,
                           backgroundColor: Colors.red,
@@ -283,7 +415,7 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               const SizedBox(height: 20),
 
-              // Search Bar
+              // Search Bar - Updated with centered hint text
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
@@ -297,130 +429,65 @@ class _UserHomePageState extends State<UserHomePage> {
                     ),
                   ],
                 ),
-                child: const TextField(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    _searchDoctors(value);
+                  },
+                  textAlignVertical: TextAlignVertical.center,
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    icon: Icon(Icons.search),
-                    hintText: 'Search doctors, hospitals...',
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? GestureDetector(
+                      onTap: _clearSearch,
+                      child: const Icon(Icons.clear, color: Colors.grey),
+                    )
+                        : null,
+                    hintText: 'Search doctors...',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
               ),
               const SizedBox(height: 25),
 
-              // Main Services
-              const Text(
-                "Services",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildCategory(
-                      context, Icons.calendar_month, "Booking\nAppointment",
-                      Colors.blue),
-                  _buildCategory(context, Icons.history, "Appointment\nHistory",
-                      Colors.green),
-                  _buildCategory(
-                      context, Icons.medical_information, "Medical\nRecord",
-                      Colors.purple),
-                  _buildCategory(context, Icons.home_work, "HomeCare\nServices",
-                      Colors.orange),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Additional Services
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildCategory(
-                      context, Icons.person_search, "HomeCare\nHistory",
-                      Colors.teal),
-                  _buildCategory(
-                      context, Icons.local_hospital, "List of\nHospitals",
-                      Colors.red),
-                  _buildCategory(context, Icons.account_circle, "User\nProfile",
-                      Colors.indigo),
-                  _buildCategory(
-                      context, Icons.feedback, "Feedback/\nContact Us",
-                      Colors.amber),
-                ],
-              ),
-              const SizedBox(height: 25),
-
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EmergencyServicePage(),
+              // Search Results Section
+              if (showSearchResults) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Search Results (${searchResults.length})",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade400, Colors.blue.shade600],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              "Emergency Service",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    if (searchResults.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const BookAppointmentPage(),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              "24/7 Available for urgent care",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                          );
+                        },
+                        child: const Text(
+                          'View All',
+                          style: TextStyle(color: Colors.blue),
                         ),
                       ),
-                      const Icon(
-                        Icons.emergency,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 25),
+                const SizedBox(height: 12),
 
-              // Popular Doctors
-              const Text(
-                "Popular Doctor",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              // Dynamic Popular Doctors List
-              if (isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else
-                if (popularDoctors.isEmpty)
+                if (isSearching)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (searchResults.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -436,7 +503,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     ),
                     child: const Center(
                       child: Text(
-                        'No popular doctors found',
+                        'No doctors found for your search',
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 16,
@@ -445,11 +512,160 @@ class _UserHomePageState extends State<UserHomePage> {
                     ),
                   )
                 else
-                  ...popularDoctors.map((doctor) =>
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildDoctorCard(doctor['doctorId'], doctor),
-                      )),
+                  ...searchResults.take(3).map((doctor) => // Show only first 3 results
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildDoctorCard(doctor['doctorId'], doctor),
+                  )),
+
+                const SizedBox(height: 25),
+              ],
+
+              // Main Services (only show when not searching)
+              if (!showSearchResults) ...[
+                const Text(
+                  "Services",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildCategory(
+                        context, Icons.calendar_month, "Booking\nAppointment",
+                        Colors.blue),
+                    _buildCategory(context, Icons.history, "Appointment\nHistory",
+                        Colors.green),
+                    _buildCategory(
+                        context, Icons.medical_information, "Medical\nRecord",
+                        Colors.purple),
+                    _buildCategory(context, Icons.home_work, "HomeCare\nServices",
+                        Colors.orange),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Additional Services
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildCategory(
+                        context, Icons.person_search, "HomeCare\nHistory",
+                        Colors.teal),
+                    _buildCategory(
+                        context, Icons.local_hospital, "List of\nHospitals",
+                        Colors.red),
+                    _buildCategory(context, Icons.account_circle, "User\nProfile",
+                        Colors.indigo),
+                    _buildCategory(
+                        context, Icons.feedback, "Feedback/\nContact Us",
+                        Colors.amber),
+                  ],
+                ),
+                const SizedBox(height: 25),
+
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EmergencyServicePage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade400, Colors.blue.shade600],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                "Emergency Service",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                "24/7 Available for urgent care",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.emergency,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                // Popular Doctors
+                const Text(
+                  "Popular Doctor",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+
+                // Dynamic Popular Doctors List
+                if (isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else
+                  if (popularDoctors.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'No popular doctors found',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...popularDoctors.map((doctor) =>
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildDoctorCard(doctor['doctorId'], doctor),
+                        )),
+              ],
 
               const SizedBox(height: 80), // Extra space for bottom navigation
             ],
@@ -488,12 +704,12 @@ class _UserHomePageState extends State<UserHomePage> {
               label: 'Records',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           onTap: (index) {
@@ -513,14 +729,18 @@ class _UserHomePageState extends State<UserHomePage> {
               // Navigate to Medical Records
                 break;
               case 3:
+              // Navigate to Favorites
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
+                );
+                break;
+              case 4:
               // Navigate to Profile
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ProfilePage()),
                 );
-                break;
-              case 4:
-              // Navigate to More/Settings
                 break;
             }
           },
@@ -535,7 +755,10 @@ class _UserHomePageState extends State<UserHomePage> {
       onTap: () {
         // Handle navigation based on title
         if (title.contains("Booking\nAppointment")) {
-          Navigator.pushNamed(context, '/book-appointment');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BookAppointmentPage()),
+          );
         } else if (title.contains("Appointment\nHistory")) {
           Navigator.push(
             context,

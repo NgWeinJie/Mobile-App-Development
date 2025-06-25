@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'home_page.dart';
+import 'profile_page.dart';
+import 'favorites_page.dart';
+import 'appointment_history_page.dart';
 
 class BookingHistoryPage extends StatefulWidget {
   const BookingHistoryPage({super.key});
@@ -733,7 +737,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
           unselectedItemColor: Colors.grey,
           selectedFontSize: 12,
           unselectedFontSize: 12,
-          currentIndex: 2, // Set to bookings/records tab
+          currentIndex: 0,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -745,33 +749,48 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.medical_information),
-              label: 'Bookings',
+              label: 'Records',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
               label: 'Profile',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
-            ),
           ],
           onTap: (index) {
             switch (index) {
               case 0:
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserHomePage()),
+                );
                 break;
               case 1:
-              // Navigate to Appointments
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AppointmentHistoryPage()),
+                );
                 break;
               case 2:
-              // Already on bookings page
+              // Navigate to Medical Records
                 break;
               case 3:
-              // Navigate to Profile
+              // Navigate to Favorites
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
+                );
                 break;
               case 4:
-              // Navigate to More/Settings
+              // Navigate to Profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
                 break;
             }
           },
