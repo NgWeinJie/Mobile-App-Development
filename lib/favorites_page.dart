@@ -7,6 +7,7 @@ import 'view_doctor_profile.dart';
 import 'home_care_booking_page.dart';
 import 'appointment_history_page.dart';
 import 'profile_page.dart';
+import 'medical_record_page.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -292,6 +293,10 @@ class _FavoritesPageState extends State<FavoritesPage> with SingleTickerProvider
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
               // Current Page

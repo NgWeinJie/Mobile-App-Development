@@ -7,6 +7,7 @@ import 'view_doctor_profile.dart';
 import 'favorites_page.dart';
 import 'profile_page.dart';
 import 'appointment_history_page.dart';
+import 'medical_record_page.dart';
 
 class BookAppointmentPage extends StatefulWidget {
   const BookAppointmentPage({super.key});
@@ -444,6 +445,10 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
               // Navigate to Favorites

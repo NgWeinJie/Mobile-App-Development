@@ -20,6 +20,7 @@ import 'home_care_page.dart';
 import 'booking_history_page.dart';
 import 'doctor/doctor_news_page.dart';
 import 'doctor/doctor_schedule_page.dart';
+import 'medical_record_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +62,7 @@ class MyApp extends StatelessWidget {
         '/nurse-profile': (context) => const NurseProfilePage(),
         '/doctor-news': (context) => const DoctorNewsPage(),
         '/doctor-schedule': (context) => const DoctorSchedulePage(),
+        '/medical-records': (context) => const MedicalRecordsPage(),
       },
       debugShowCheckedModeBanner: false,
     );

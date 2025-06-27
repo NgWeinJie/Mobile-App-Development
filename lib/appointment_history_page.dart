@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'favorites_page.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
+import 'medical_record_page.dart';
 
 class AppointmentHistoryPage extends StatefulWidget {
   const AppointmentHistoryPage({super.key});
@@ -667,6 +668,10 @@ class _AppointmentHistoryPageState extends State<AppointmentHistoryPage>
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
               // Navigate to Favorites

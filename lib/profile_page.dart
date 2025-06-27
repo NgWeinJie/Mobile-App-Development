@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_page.dart';
 import 'favorites_page.dart';
 import 'appointment_history_page.dart';
+import 'medical_record_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -420,6 +421,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
               // Navigate to Favorites

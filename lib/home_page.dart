@@ -8,6 +8,7 @@ import 'profile_page.dart';
 import 'contact_feedback_page.dart';
 import 'book_appointment_page.dart';
 import 'favorites_page.dart';
+import 'medical_record_page.dart';
 
 class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key});
@@ -727,6 +728,11 @@ class _UserHomePageState extends State<UserHomePage> {
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
               // Navigate to Favorites
@@ -767,6 +773,7 @@ class _UserHomePageState extends State<UserHomePage> {
           );
         } else if (title.contains("Medical")) {
           // Navigate to medical records
+          Navigator.pushNamed(context, '/medical-records');
         } else if (title.contains("HomeCare\nServices")) {
           // Navigate to nurse services
           Navigator.pushNamed(context, '/home-care');

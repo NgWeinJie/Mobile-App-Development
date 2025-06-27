@@ -6,6 +6,7 @@ import 'home_page.dart';
 import 'favorites_page.dart';
 import 'profile_page.dart';
 import 'appointment_history_page.dart';
+import 'medical_record_page.dart';
 
 class HospitalsListPage extends StatefulWidget {
   const HospitalsListPage({super.key});
@@ -371,6 +372,10 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
               // Navigate to Favorites
