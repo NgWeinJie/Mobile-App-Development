@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app_development/nurse/nurse_home_page.dart';
 import 'package:mobile_app_development/nurse/nurse_login_page.dart';
 import 'package:mobile_app_development/nurse/nurse_register_page.dart';
+import 'package:mobile_app_development/nurse/nurse_schedule_page.dart';
 import 'firebase_options.dart';
 import 'nurse/nurse_profile_page.dart';
 import 'register_page.dart';
@@ -21,6 +22,12 @@ import 'booking_history_page.dart';
 import 'doctor/doctor_news_page.dart';
 import 'doctor/doctor_schedule_page.dart';
 import 'medical_record_page.dart';
+import 'doctor/doctor_medical_page.dart';
+import 'nurse/nurse_medical_page.dart';
+import 'nurse/nurse_contact_page.dart';
+import 'doctor/doctor_contact_page.dart';
+import 'doctor/doctor_terms_page.dart';
+import 'nurse/nurse_terms_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +70,13 @@ class MyApp extends StatelessWidget {
         '/doctor-news': (context) => const DoctorNewsPage(),
         '/doctor-schedule': (context) => const DoctorSchedulePage(),
         '/medical-records': (context) => const MedicalRecordsPage(),
+        '/nurse-schedule': (context) => const NurseSchedulePage(),
+        '/doctor-medical-records': (context) => const DoctorMedicalPage(),
+        '/nurse-medical-records': (context) => const NurseMedicalPage(),
+        '/nurse-contact': (context) => const NurseContactPage(),
+        '/doctor-contact': (context) => const DoctorContactPage(),
+        '/doctor-terms': (context) => const DoctorTermsPage(),
+        '/nurse-terms': (context) => const NurseTermsPage(),
       },
       debugShowCheckedModeBanner: false,
     );

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NurseHomePage extends StatelessWidget {
   const NurseHomePage({super.key});
@@ -24,6 +25,60 @@ class NurseHomePage extends StatelessWidget {
 
   void _goToNews(BuildContext context) {
     Navigator.pushNamed(context, '/doctor-news');
+  }
+
+  void _goToContactUs(BuildContext context) {
+    Navigator.pushNamed(context, '/nurse-contact');
+  }
+
+  void _goToTermsPage(BuildContext context) {
+    Navigator.pushNamed(context, '/nurse-terms');
+  }
+
+  void _showBookingDetailsDialog(BuildContext context, Map<String, dynamic> data) {
+    final patient = data['patientDetails'] ?? {};
+    final List<dynamic> selectedDates = data['selectedDates'] ?? [];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Appointment Details'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nurse Info', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Name: ${data['nurseName'] ?? 'N/A'}'),
+              Text('Hospital: ${data['nurseHospital'] ?? 'N/A'}'),
+              Text('Specialization: ${data['nurseSpecialization'] ?? 'N/A'}'),
+              const SizedBox(height: 12),
+              const Text('Patient Info', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Name: ${patient['name'] ?? 'N/A'}'),
+              Text('Email: ${patient['email'] ?? 'N/A'}'),
+              Text('Mobile: ${patient['mobile'] ?? 'N/A'}'),
+              Text('Gender: ${patient['gender'] ?? 'N/A'}'),
+              Text('NRIC: ${patient['nric'] ?? 'N/A'}'),
+              const SizedBox(height: 12),
+              const Text('Appointment Info', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Dates: ${selectedDates.join(', ')}'),
+              Text('Time Slot: ${data['timeSlot'] ?? 'N/A'}'),
+              Text('Status: ${data['status'] ?? 'N/A'}'),
+              if (data['createdAt'] != null)
+                Text(
+                  'Created At: ${data['createdAt'].toDate().toLocal()}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Close'),
+            onPressed: () => Navigator.pop(context),
+          )
+        ],
+      ),
+    );
   }
 
   Widget _buildFeatureCard({
@@ -86,11 +141,35 @@ class NurseHomePage extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logout button top-right
+                  // Logout
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blue[100],
+                        child: IconButton(
+                          icon: const Icon(Icons.verified_user, color: Colors.blue),
+                          onPressed: () => _goToTermsPage(context),
+                          tooltip: 'Terms & Conditions',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blue[100],
+                        child: IconButton(
+                          icon: const Icon(Icons.comment, color: Colors.blue),
+                          onPressed: () => _goToContactUs(context),
+                          tooltip: 'Contact Us',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.blue[100],
@@ -105,7 +184,7 @@ class NurseHomePage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Welcome message
+                  // Welcome
                   Row(
                     children: [
                       CircleAvatar(
@@ -129,7 +208,7 @@ class NurseHomePage extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // Feature cards
+                  // Feature Cards
                   GridView.count(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
@@ -163,6 +242,90 @@ class NurseHomePage extends StatelessWidget {
                         onTap: () => _goToNews(context),
                       ),
                     ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Appointments
+                  const Text(
+                    'Upcoming Appointments',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  FutureBuilder<QuerySnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('booking')
+                        .where('nurseId', isEqualTo: user.uid)
+                        .where('status', isEqualTo: 'confirmed')
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Text(
+                          'No upcoming appointments.',
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        );
+                      }
+
+                      final now = DateTime.now();
+                      final upcoming = snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final List<dynamic> selectedDates = data['selectedDates'] ?? [];
+                        return selectedDates.any((dateStr) {
+                          try {
+                            final parsed = DateTime.parse(dateStr);
+                            return parsed.isAfter(now);
+                          } catch (_) {
+                            return false;
+                          }
+                        });
+                      }).toList();
+
+                      if (upcoming.isEmpty) {
+                        return const Text(
+                          'No upcoming appointments.',
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        );
+                      }
+
+                      return Column(
+                        children: upcoming.map((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final patient = data['patientDetails'] ?? {};
+                          final List<dynamic> selectedDates = data['selectedDates'] ?? [];
+
+                          final firstUpcomingDate = selectedDates.firstWhere((dateStr) {
+                            try {
+                              return DateTime.parse(dateStr).isAfter(now);
+                            } catch (_) {
+                              return false;
+                            }
+                          }, orElse: () => 'Unknown');
+
+                          return Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              leading: const Icon(Icons.calendar_today, color: Colors.blue),
+                              title: Text(patient['name'] ?? 'Unknown'),
+                              subtitle: Text('$firstUpcomingDate at ${data['timeSlot']}'),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () => _showBookingDetailsDialog(context, data),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
               ),
