@@ -4,6 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_page.dart';
 import 'select_datetime_page.dart';
 import 'view_doctor_profile.dart';
+import 'favorites_page.dart';
+import 'profile_page.dart';
+import 'appointment_history_page.dart';
+import 'medical_record_page.dart';
 
 class BookAppointmentPage extends StatefulWidget {
   const BookAppointmentPage({super.key});
@@ -400,7 +404,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
           unselectedItemColor: Colors.grey,
           selectedFontSize: 12,
           unselectedFontSize: 12,
-          currentIndex: 1, // Appointments tab selected
+          currentIndex: 0,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -415,31 +419,50 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
               label: 'Records',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           onTap: (index) {
             // Handle navigation based on index
             switch (index) {
               case 0:
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const UserHomePage()),
                 );
                 break;
               case 1:
-              // Already on appointments page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AppointmentHistoryPage()),
+                );
                 break;
               case 2:
-              // Navigate to chat
+              // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
-              // Navigate to profile
+              // Navigate to Favorites
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
+                );
+                break;
+              case 4:
+              // Navigate to Profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
                 break;
             }
           },

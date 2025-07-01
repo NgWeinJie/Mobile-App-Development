@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'favorites_page.dart';
+import 'profile_page.dart';
+import 'home_page.dart';
+import 'medical_record_page.dart';
 
 class AppointmentHistoryPage extends StatefulWidget {
   const AppointmentHistoryPage({super.key});
@@ -643,30 +647,45 @@ class _AppointmentHistoryPageState extends State<AppointmentHistoryPage>
               label: 'Records',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           onTap: (index) {
             switch (index) {
               case 0:
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserHomePage()),
+                );
                 break;
               case 1:
-              // Already on appointments page
+              // already here
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
-              // Navigate to Profile
+              // Navigate to Favorites
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
+                );
                 break;
               case 4:
-              // Navigate to More/Settings
+              // Navigate to Profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
                 break;
             }
           },

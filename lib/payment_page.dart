@@ -65,8 +65,8 @@ class _PaymentPageState extends State<PaymentPage> {
     return (widget.doctorData['price'] ?? 0).toDouble();
   }
 
-  double get serviceFee => 5.0; // Fixed service fee
-  double get totalAmount => servicePrice + serviceFee;
+  double get transportationFee => 20.0; // Changed from serviceFee to transportationFee (RM20)
+  double get totalAmount => servicePrice + transportationFee;
 
   int get totalDays {
     if (widget.isHomeCare && widget.doctorData['selectedDates'] != null) {
@@ -185,7 +185,7 @@ class _PaymentPageState extends State<PaymentPage> {
       'bookingDate': DateFormat('yyyy-MM-dd').format(widget.selectedDate),
       'timeSlot': widget.selectedTimeSlot,
       'price': servicePrice,
-      'serviceFee': serviceFee,
+      'transportationFee': transportationFee, // Changed from serviceFee
       'totalAmount': totalAmount,
       'status': 'confirmed', // Changed from 'pending' since payment is completed
       'serviceType': widget.isHomeCare ? 'home_care' : 'clinic',
@@ -674,8 +674,8 @@ class _PaymentPageState extends State<PaymentPage> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('Platform Fee'),
-                                  Text('RM ${serviceFee.toStringAsFixed(2)}'),
+                                  const Text('Transportation Fee'), // Changed from 'Platform Fee'
+                                  Text('RM ${transportationFee.toStringAsFixed(2)}'), // Changed variable name
                                 ],
                               ),
                               const Divider(height: 20),

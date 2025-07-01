@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home_page.dart';
+import 'favorites_page.dart';
+import 'appointment_history_page.dart';
+import 'medical_record_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -90,8 +94,8 @@ class _ProfilePageState extends State<ProfilePage> {
       await _firestore.collection('users').doc(user.uid).update({
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
-        'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
+        // Note: Email is not updated since it's disabled for editing
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,12 +169,13 @@ class _ProfilePageState extends State<ProfilePage> {
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool forceReadOnly = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
-        readOnly: !_isEditMode,
+        readOnly: forceReadOnly || !_isEditMode,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
@@ -184,7 +189,7 @@ class _ProfilePageState extends State<ProfilePage> {
             borderSide: const BorderSide(color: Colors.blue),
           ),
           filled: true,
-          fillColor: !_isEditMode ? Colors.grey.shade50 : Colors.white,
+          fillColor: (forceReadOnly || !_isEditMode) ? Colors.grey.shade100 : Colors.white,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
@@ -287,6 +292,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Email',
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
+                      forceReadOnly: true, // Email is always read-only
                     ),
                     _buildTextField(
                       controller: _phoneController,
@@ -375,7 +381,7 @@ class _ProfilePageState extends State<ProfilePage> {
           unselectedItemColor: Colors.grey,
           selectedFontSize: 12,
           unselectedFontSize: 12,
-          currentIndex: 3, // Set to profile tab
+          currentIndex: 4, // Set to profile tab
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -390,30 +396,45 @@ class _ProfilePageState extends State<ProfilePage> {
               label: 'Records',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
           onTap: (index) {
             switch (index) {
               case 0:
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserHomePage()),
+                );
                 break;
               case 1:
-                Navigator.pushReplacementNamed(context, '/appointment-history');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AppointmentHistoryPage()),
+                );
                 break;
               case 2:
               // Navigate to Medical Records
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicalRecordsPage()),
+                );
                 break;
               case 3:
-              // Already on profile page
+              // Navigate to Favorites
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
+                );
                 break;
               case 4:
-              // Navigate to More/Settings
+              // Current Page
                 break;
             }
           },

@@ -21,6 +21,7 @@ import 'home_care_page.dart';
 import 'booking_history_page.dart';
 import 'doctor/doctor_news_page.dart';
 import 'doctor/doctor_schedule_page.dart';
+import 'medical_record_page.dart';
 import 'doctor/doctor_medical_page.dart';
 import 'nurse/nurse_medical_page.dart';
 import 'nurse/nurse_contact_page.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
         '/nurse-profile': (context) => const NurseProfilePage(),
         '/doctor-news': (context) => const DoctorNewsPage(),
         '/doctor-schedule': (context) => const DoctorSchedulePage(),
+        '/medical-records': (context) => const MedicalRecordsPage(),
         '/nurse-schedule': (context) => const NurseSchedulePage(),
         '/doctor-medical-records': (context) => const DoctorMedicalPage(),
         '/nurse-medical-records': (context) => const NurseMedicalPage(),
