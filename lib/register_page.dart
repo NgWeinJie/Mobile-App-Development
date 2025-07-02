@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'terms_privacy_page.dart';
 
-
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -30,16 +29,67 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  bool _validateForm() {
+    // Validate first name
+    if (_firstNameController.text.isEmpty) {
+      _showErrorSnackBar('Please enter your first name');
+      return false;
+    }
+    if (_firstNameController.text.length < 2) {
+      _showErrorSnackBar('First name must be at least 2 characters');
+      return false;
+    }
+
+    // Validate last name
+    if (_lastNameController.text.isEmpty) {
+      _showErrorSnackBar('Please enter your last name');
+      return false;
+    }
+    if (_lastNameController.text.length < 2) {
+      _showErrorSnackBar('Last name must be at least 2 characters');
+      return false;
+    }
+
+    // Validate email
+    if (_emailController.text.isEmpty) {
+      _showErrorSnackBar('Please enter your email');
+      return false;
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(_emailController.text)) {
+      _showErrorSnackBar('Please enter a valid email address');
+      return false;
+    }
+
+    // Validate password
+    if (_passwordController.text.isEmpty) {
+      _showErrorSnackBar('Please enter a password');
+      return false;
+    }
+    if (_passwordController.text.length < 6) {
+      _showErrorSnackBar('Password must be at least 6 characters');
+      return false;
+    }
+
+    // Validate terms agreement
+    if (!_agreeToTerms) {
+      _showErrorSnackBar('Please agree to the Terms of Service & Privacy Policy');
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate() || !_agreeToTerms) {
-      if (!_agreeToTerms) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please agree to the Terms of Service & Privacy Policy'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (!_validateForm()) {
       return;
     }
 
@@ -48,12 +98,17 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
+      // Create user account
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      // Send email verification
+      await userCredential.user!.sendEmailVerification();
+
+      // Save user data to Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -65,12 +120,21 @@ class _RegisterPageState extends State<RegisterPage> {
       });
 
       if (mounted) {
+        // Show success SnackBar
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account created successfully!'),
+            content: Text(
+              'Registration successful! Please verify your email before login.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pushReplacementNamed(context, '/login');
       }
     } on FirebaseAuthException catch (e) {
       String message = 'An error occurred';
@@ -80,24 +144,16 @@ class _RegisterPageState extends State<RegisterPage> {
         message = 'The account already exists for that email.';
       } else if (e.code == 'invalid-email') {
         message = 'Please enter a valid email address.';
+      } else if (e.code == 'network-request-failed') {
+        message = 'Network error. Please check your connection.';
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorSnackBar(message);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('An unexpected error occurred'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorSnackBar('An unexpected error occurred');
       }
     } finally {
       if (mounted) {
@@ -159,15 +215,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 child: _buildTextField(
                                   controller: _firstNameController,
                                   hintText: 'First Name',
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your first name';
-                                    }
-                                    if (value.length < 2) {
-                                      return 'First name must be at least 2 characters';
-                                    }
-                                    return null;
-                                  },
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -175,15 +222,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 child: _buildTextField(
                                   controller: _lastNameController,
                                   hintText: 'Last Name',
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your last name';
-                                    }
-                                    if (value.length < 2) {
-                                      return 'Last name must be at least 2 characters';
-                                    }
-                                    return null;
-                                  },
                                 ),
                               ),
                             ],
@@ -195,16 +233,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _emailController,
                             hintText: 'Email',
                             keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
-                              }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                  .hasMatch(value)) {
-                                return 'Please enter a valid email address';
-                              }
-                              return null;
-                            },
                           ),
                           const SizedBox(height: 16),
 
@@ -226,15 +254,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 });
                               },
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a password';
-                              }
-                              if (value.length < 6) {
-                                return 'Password must be at least 6 characters';
-                              }
-                              return null;
-                            },
                           ),
 
                           const SizedBox(height: 20),
@@ -364,7 +383,6 @@ class _RegisterPageState extends State<RegisterPage> {
     TextInputType? keyboardType,
     bool obscureText = false,
     Widget? suffixIcon,
-    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -392,7 +410,6 @@ class _RegisterPageState extends State<RegisterPage> {
           contentPadding: const EdgeInsets.all(16),
           suffixIcon: suffixIcon,
         ),
-        validator: validator,
       ),
     );
   }

@@ -133,14 +133,25 @@ class _HomeCareBookingPageState extends State<HomeCareBookingPage> {
           .get();
 
       // Only include dates that are not cancelled
-      final bookedDatesSet = querySnapshot.docs
-          .where((doc) {
+      final bookedDatesSet = <String>{};
+
+      for (final doc in querySnapshot.docs.where((doc) {
         final data = doc.data();
         final status = data['status'] as String?;
         return status != 'cancelled';
-      })
-          .map((doc) => doc.data()['bookingDate'] as String)
-          .toSet();
+      })) {
+        final data = doc.data();
+        final selectedDates = data['selectedDates'] as List?;
+
+        if (selectedDates != null) {
+          // Add all dates from the selectedDates array
+          for (final date in selectedDates) {
+            if (date is String) {
+              bookedDatesSet.add(date);
+            }
+          }
+        }
+      }
 
       setState(() {
         bookedDates = bookedDatesSet;
