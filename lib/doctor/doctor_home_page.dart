@@ -26,6 +26,59 @@ class DoctorHomePage extends StatelessWidget {
     Navigator.pushNamed(context, '/doctor-news');
   }
 
+  void _goToContactPage(BuildContext context) {
+    Navigator.pushNamed(context, '/doctor-contact');
+  }
+
+  void _goToTermsPage(BuildContext context) {
+    Navigator.pushNamed(context, '/doctor-terms');
+  }
+
+  void _showAppointmentDetailsDialog(BuildContext context, Map<String, dynamic> data) {
+    final patient = data['patientDetails'] ?? {};
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Appointment Details'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Doctor Info', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Name: ${data['doctorName'] ?? 'N/A'}'),
+              Text('Hospital: ${data['doctorHospital'] ?? 'N/A'}'),
+              Text('Specialization: ${data['doctorSpecialization'] ?? 'N/A'}'),
+              const SizedBox(height: 12),
+              const Text('Patient Info', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Name: ${patient['name'] ?? 'N/A'}'),
+              Text('Email: ${patient['email'] ?? 'N/A'}'),
+              Text('Mobile: ${patient['mobile'] ?? 'N/A'}'),
+              Text('Gender: ${patient['gender'] ?? 'N/A'}'),
+              Text('NRIC: ${patient['nric'] ?? 'N/A'}'),
+              const SizedBox(height: 12),
+              const Text('Appointment Info', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Date: ${data['appointmentDate'] ?? 'N/A'}'),
+              Text('Time Slot: ${data['timeSlot'] ?? 'N/A'}'),
+              Text('Status: ${data['status'] ?? 'N/A'}'),
+              if (data['createdAt'] != null)
+                Text(
+                  'Created At: ${data['createdAt'].toDate().toLocal()}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Close'),
+            onPressed: () => Navigator.pop(context),
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _buildFeatureCard({
     required BuildContext context,
     required IconData icon,
@@ -88,10 +141,32 @@ class DoctorHomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logout button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blue[100],
+                        child: IconButton(
+                          icon: const Icon(Icons.verified_user, color: Colors.blue),
+                          onPressed: () => _goToTermsPage(context),
+                          tooltip: 'Terms & Conditions',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blue[100],
+                        child: IconButton(
+                          icon: const Icon(Icons.comment, color: Colors.blue),
+                          onPressed: () => _goToContactPage(context),
+                          tooltip: 'Contact Us',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.blue[100],
@@ -104,9 +179,9 @@ class DoctorHomePage extends StatelessWidget {
                     ],
                   ),
 
+
                   const SizedBox(height: 16),
 
-                  // Welcome message
                   Row(
                     children: [
                       CircleAvatar(
@@ -130,7 +205,6 @@ class DoctorHomePage extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // Category label
                   const Text(
                     'Category',
                     style: TextStyle(
@@ -142,7 +216,6 @@ class DoctorHomePage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Feature cards
                   GridView.count(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
@@ -180,7 +253,6 @@ class DoctorHomePage extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // Category label
                   const Text(
                     'Upcoming Appointments',
                     style: TextStyle(
@@ -197,7 +269,7 @@ class DoctorHomePage extends StatelessWidget {
                         .collection('appointments')
                         .where('doctorId', isEqualTo: user.uid)
                         .where('status', isEqualTo: 'pending')
-                        .orderBy('appointmentDate') // make sure this is stored as a string like '2025-06-17'
+                        .orderBy('appointmentDate')
                         .limit(3)
                         .get(),
                     builder: (context, snapshot) {
@@ -206,8 +278,10 @@ class DoctorHomePage extends StatelessWidget {
                       }
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return const Text('No upcoming appointments.',
-                            style: TextStyle(fontSize: 16, color: Colors.black54));
+                        return const Text(
+                          'No upcoming appointments.',
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        );
                       }
 
                       final appointments = snapshot.data!.docs;
@@ -216,6 +290,7 @@ class DoctorHomePage extends StatelessWidget {
                         children: appointments.map((doc) {
                           final data = doc.data() as Map<String, dynamic>;
                           final patient = data['patientDetails'] ?? {};
+
                           return Card(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 2,
@@ -228,6 +303,7 @@ class DoctorHomePage extends StatelessWidget {
                                 style: const TextStyle(color: Colors.black54),
                               ),
                               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () => _showAppointmentDetailsDialog(context, data),
                             ),
                           );
                         }).toList(),
