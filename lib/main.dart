@@ -28,12 +28,14 @@ import 'nurse/nurse_contact_page.dart';
 import 'doctor/doctor_contact_page.dart';
 import 'doctor/doctor_terms_page.dart';
 import 'nurse/nurse_terms_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
