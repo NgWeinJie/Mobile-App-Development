@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
       String message = 'Login failed';
       if (e.code == 'user-not-found') {
         message = 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
+      } else if (e.code == 'invalid-credential') {
         message = 'Wrong password provided.';
       } else if (e.code == 'invalid-email') {
         message = 'Please enter a valid email address.';
