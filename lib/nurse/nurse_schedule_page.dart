@@ -34,7 +34,7 @@ class _NurseSchedulePageState extends State<NurseSchedulePage> {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('booking')
           .where('nurseId', isEqualTo: _nurseId)
-          .where('bookingDate', isEqualTo: formattedDate)
+          .where('selectedDates', arrayContains: formattedDate)
           .orderBy('timeSlot')
           .get();
 
@@ -42,16 +42,13 @@ class _NurseSchedulePageState extends State<NurseSchedulePage> {
 
       for (var doc in querySnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final bookingDateStr = data['bookingDate'];
         final timeSlot = data['timeSlot'];
         final status = data['status'];
 
-        if (bookingDateStr != null &&
-            timeSlot != null &&
-            status != 'Completed') {
+        if (timeSlot != null && status != 'Completed') {
           try {
             final appointmentDateTime = DateFormat('yyyy-MM-dd HH:mm')
-                .parse('$bookingDateStr ${timeSlot.trim()}');
+                .parse('$formattedDate ${timeSlot.trim()}');
 
             if (appointmentDateTime.isBefore(now)) {
               await doc.reference.update({'status': 'Completed'});
@@ -87,18 +84,22 @@ class _NurseSchedulePageState extends State<NurseSchedulePage> {
           .get();
 
       final allAppointments = querySnapshot.docs;
-
       Map<DateTime, List<dynamic>> events = {};
 
       for (var doc in allAppointments) {
         final data = doc.data();
-        final dateStr = data['bookingDate'] as String?;
-        if (dateStr != null) {
-          final date = DateTime.parse(dateStr);
-          if (date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
-              date.isBefore(endOfMonth.add(const Duration(days: 1)))) {
-            final eventDay = DateTime(date.year, date.month, date.day);
-            events.putIfAbsent(eventDay, () => []).add(data);
+        final selectedDates = List<String>.from(data['selectedDates'] ?? []);
+
+        for (final dateStr in selectedDates) {
+          try {
+            final date = DateTime.parse(dateStr);
+            if (date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+                date.isBefore(endOfMonth.add(const Duration(days: 1)))) {
+              final eventDay = DateTime(date.year, date.month, date.day);
+              events.putIfAbsent(eventDay, () => []).add(data);
+            }
+          } catch (e) {
+            debugPrint("Invalid date format: $dateStr");
           }
         }
       }
@@ -135,7 +136,7 @@ class _NurseSchedulePageState extends State<NurseSchedulePage> {
               Text('Address: ${patient['address'] ?? 'N/A'}'),
               const SizedBox(height: 12),
               const Text('Booking Info', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('Date: ${data['bookingDate'] ?? 'N/A'}'),
+              Text('Dates: ${(data['selectedDates'] as List<dynamic>?)?.join(", ") ?? 'N/A'}'),
               Text('Time Slot: ${data['timeSlot'] ?? 'N/A'}'),
               Text('Status: ${data['status'] ?? 'N/A'}'),
               if (data['createdAt'] != null)
