@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -27,7 +28,7 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
     super.dispose();
   }
 
-  // Launch URL (website or phone)
+  // Launch URL (website)
   Future<void> _launchUrl(String url) async {
     try {
       final Uri uri = Uri.parse(url);
@@ -42,6 +43,18 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
         ),
       );
     }
+  }
+
+  // Copy phone number to clipboard
+  Future<void> _copyPhoneNumber(String phoneNumber) async {
+    await Clipboard.setData(ClipboardData(text: phoneNumber));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Phone number copied: $phoneNumber'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   // Show hospital details dialog
@@ -128,46 +141,23 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
 
                 const SizedBox(height: 16),
 
-                // Contact buttons
-                Row(
-                  children: [
-                    if (hospital['phone'] != null && hospital['phone'].isNotEmpty)
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _launchUrl('tel:${hospital['phone']}'),
-                          icon: const Icon(Icons.phone, size: 16),
-                          label: const Text('Call'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                // Website button only
+                if (hospital['website'] != null && hospital['website'].isNotEmpty)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _launchUrl(hospital['website']),
+                      icon: const Icon(Icons.web, size: 16),
+                      label: const Text('Visit Website'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-
-                    if (hospital['phone'] != null && hospital['phone'].isNotEmpty &&
-                        hospital['website'] != null && hospital['website'].isNotEmpty)
-                      const SizedBox(width: 8),
-
-                    if (hospital['website'] != null && hospital['website'].isNotEmpty)
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _launchUrl(hospital['website']),
-                          icon: const Icon(Icons.web, size: 16),
-                          label: const Text('Website'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                    ),
+                  ),
 
                 const SizedBox(height: 12),
 
@@ -402,6 +392,7 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
     final name = hospital['name'] ?? 'Unknown Hospital';
     final type = hospital['type'] ?? 'General Hospital';
     final address = hospital['address'] ?? 'Unknown Address';
+    final phone = hospital['phone'] ?? '';
     final imageUrl = hospital['imageUrl'] ?? '';
     final rating = hospital['rating']?.toDouble() ?? 4.5;
 
@@ -548,6 +539,54 @@ class _HospitalsListPageState extends State<HospitalsListPage> {
                       ),
                     ],
                   ),
+
+                  // Phone number with copy functionality (only if phone exists)
+                  if (phone.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => _copyPhoneNumber(phone),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.phone,
+                              size: 16,
+                              color: Colors.green.shade600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              phone,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade700,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.copy,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 12),
 
                   // Rating with stars

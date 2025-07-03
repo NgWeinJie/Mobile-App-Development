@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyServicePage extends StatelessWidget {
@@ -94,7 +95,7 @@ class EmergencyServicePage extends StatelessWidget {
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
-                        "Tap phone numbers to call or navigation icon to get directions",
+                        "Tap phone numbers to copy or navigation icon to get directions",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -185,6 +186,18 @@ class EmergencyServicePage extends StatelessWidget {
     );
   }
 
+  // Copy phone number to clipboard
+  Future<void> _copyPhoneNumber(BuildContext context, String phoneNumber) async {
+    await Clipboard.setData(ClipboardData(text: phoneNumber));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Phone number copied: $phoneNumber'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   // Emergency Contact Card Widget
   Widget _buildEmergencyCard(
       BuildContext context,
@@ -269,7 +282,7 @@ class EmergencyServicePage extends StatelessWidget {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _makePhoneCall(phoneNumber),
+                  onTap: () => _copyPhoneNumber(context, phoneNumber),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
@@ -277,45 +290,28 @@ class EmergencyServicePage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.red.shade200),
                     ),
-                    child: Text(
-                      phoneNumber,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          phoneNumber,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Icon(
+                          Icons.copy,
+                          color: Colors.red.shade400,
+                          size: 18,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Call Button
-              GestureDetector(
-                onTap: () => _makePhoneCall(phoneNumber),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.green.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.phone,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
 
               // Navigation Button
               GestureDetector(
@@ -394,17 +390,17 @@ class EmergencyServicePage extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Malaysia Emergency Numbers
-          _buildEmergencyNumberRow("Police", "999"),
+          _buildEmergencyNumberRow(context, "Police", "999"),
           const SizedBox(height: 8),
-          _buildEmergencyNumberRow("Fire & Rescue", "994"),
+          _buildEmergencyNumberRow(context, "Fire & Rescue", "994"),
           const SizedBox(height: 8),
-          _buildEmergencyNumberRow("General Emergency", "999"),
+          _buildEmergencyNumberRow(context, "General Emergency", "999"),
         ],
       ),
     );
   }
 
-  Widget _buildEmergencyNumberRow(String service, String number) {
+  Widget _buildEmergencyNumberRow(BuildContext context, String service, String number) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -416,36 +412,37 @@ class EmergencyServicePage extends StatelessWidget {
           ),
         ),
         GestureDetector(
-          onTap: () => _makePhoneCall(number),
-          child: Text(
-            number,
-            style: const TextStyle(
-              color: Colors.red,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+          onTap: () => _copyPhoneNumber(context, number),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  number,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.copy,
+                  color: Colors.red.shade400,
+                  size: 14,
+                ),
+              ],
             ),
           ),
         ),
       ],
     );
-  }
-
-  // Make Phone Call Function
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-    try {
-      if (await canLaunchUrl(launchUri)) {
-        await launchUrl(launchUri);
-      } else {
-        // Handle error
-        print('Could not launch $phoneNumber');
-      }
-    } catch (e) {
-      print('Error launching phone call: $e');
-    }
   }
 
   // Open Navigation Function

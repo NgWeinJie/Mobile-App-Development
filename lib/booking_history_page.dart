@@ -63,13 +63,28 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
         final data = doc.data();
         data['id'] = doc.id;
 
-        final bookingDate = DateTime.parse(data['bookingDate']);
         final status = data['status'] as String;
 
         // Only include non-cancelled bookings
         if (status != 'cancelled') {
-          if (bookingDate.isAfter(today) ||
-              (bookingDate.isAtSameMomentAs(today) && status == 'confirmed')) {
+          // Get the earliest date from selectedDates array
+          final selectedDates = data['selectedDates'] as List<dynamic>?;
+          DateTime? earliestDate;
+
+          if (selectedDates != null && selectedDates.isNotEmpty) {
+            // Parse all dates and find the earliest one
+            final dates = selectedDates
+                .map((dateStr) => DateTime.parse(dateStr as String))
+                .toList();
+            dates.sort();
+            earliestDate = dates.first;
+          } else {
+            // Skip this booking if no selectedDates available
+            continue;
+          }
+
+          if (earliestDate.isAfter(today) ||
+              (earliestDate.isAtSameMomentAs(today) && status == 'confirmed')) {
             upcoming.add(data);
           } else {
             history.add(data);
@@ -172,9 +187,54 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
     }
   }
 
+  String _getFormattedDates(Map<String, dynamic> booking) {
+    final selectedDates = booking['selectedDates'] as List<dynamic>?;
+
+    if (selectedDates == null || selectedDates.isEmpty) {
+      return 'Date not available';
+    }
+
+    final dates = selectedDates
+        .map((dateStr) => DateTime.parse(dateStr as String))
+        .toList();
+    dates.sort();
+
+    // Single date
+    if (dates.length == 1) {
+      return DateFormat('EEE, dd MMM yyyy').format(dates.first);
+    }
+
+    // Multiple dates - check if consecutive
+    bool isConsecutive = true;
+    for (int i = 1; i < dates.length; i++) {
+      if (dates[i].difference(dates[i - 1]).inDays != 1) {
+        isConsecutive = false;
+        break;
+      }
+    }
+
+    if (isConsecutive) {
+      // Consecutive dates: "02 Jul - 04 Jul 2025"
+      if (dates.first.year == dates.last.year) {
+        final firstDate = DateFormat('dd MMM').format(dates.first);
+        final lastDate = DateFormat('dd MMM yyyy').format(dates.last);
+        return '$firstDate - $lastDate';
+      } else {
+        // Different years
+        final firstDate = DateFormat('dd MMM yyyy').format(dates.first);
+        final lastDate = DateFormat('dd MMM yyyy').format(dates.last);
+        return '$firstDate - $lastDate';
+      }
+    } else {
+      // Non-consecutive dates: "02 Jul 2025 (+2 more)"
+      final firstDate = DateFormat('dd MMM yyyy').format(dates.first);
+      final additionalCount = dates.length - 1;
+      return '$firstDate (+$additionalCount more)';
+    }
+  }
+
   Widget _buildBookingCard(Map<String, dynamic> booking) {
-    final bookingDate = DateTime.parse(booking['bookingDate']);
-    final formattedDate = DateFormat('EEE, dd MMM yyyy').format(bookingDate);
+    final formattedDate = _getFormattedDates(booking);
     final timeSlot = booking['timeSlot'] as String;
     final nurseImageUrl = booking['nurseImg'] as String?;
     final serviceType = booking['serviceType'] as String? ?? 'home_care';
@@ -250,44 +310,21 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                   ],
                 ),
               ),
-              // Status and message icon aligned to far right
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      status.toUpperCase(),
-                      style: TextStyle(
-                        color: _getStatusColor(status),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              // Status aligned to far right
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(status).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  status.toUpperCase(),
+                  style: TextStyle(
+                    color: _getStatusColor(status),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      // Navigate to chat or message
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.chat_bubble_outline,
-                        color: Colors.blue.shade600,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -410,11 +447,25 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        final bookingDate = DateTime.parse(booking['bookingDate']);
-        final formattedDate = DateFormat('EEEE, dd MMMM yyyy').format(bookingDate);
+        final selectedDates = booking['selectedDates'] as List<dynamic>?;
         final patientDetails = booking['patientDetails'] as Map<String, dynamic>?;
         final paymentDetails = booking['paymentDetails'] as Map<String, dynamic>?;
-        final selectedDates = booking['selectedDates'] as List<dynamic>?;
+
+        String formattedDateDisplay = '';
+        if (selectedDates != null && selectedDates.isNotEmpty) {
+          if (selectedDates.length == 1) {
+            final date = DateTime.parse(selectedDates[0] as String);
+            formattedDateDisplay = DateFormat('EEEE, dd MMMM yyyy').format(date);
+          } else {
+            final dates = selectedDates
+                .map((dateStr) => DateTime.parse(dateStr as String))
+                .toList();
+            dates.sort();
+            formattedDateDisplay = 'Multiple dates (${dates.length} days)';
+          }
+        } else {
+          formattedDateDisplay = 'Date not available';
+        }
 
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -491,7 +542,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
 
                   // Booking Information
                   _buildDetailRow('Service Type', _getServiceTypeDisplay(booking['serviceType'] ?? 'home_care')),
-                  _buildDetailRow('Date', formattedDate),
+                  _buildDetailRow('Date', formattedDateDisplay),
                   _buildDetailRow('Time', booking['timeSlot'] ?? 'Not specified'),
 
                   if (booking['totalDays'] != null && booking['totalDays'] > 1)
@@ -500,7 +551,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                   if (selectedDates != null && selectedDates.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     const Text(
-                      'Selected Dates:',
+                      'Service Dates:',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -510,7 +561,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                     ...selectedDates.map((date) => Padding(
                       padding: const EdgeInsets.only(left: 16, bottom: 2),
                       child: Text(
-                        '• ${DateFormat('dd MMM yyyy').format(DateTime.parse(date))}',
+                        '• ${DateFormat('EEEE, dd MMM yyyy').format(DateTime.parse(date))}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,

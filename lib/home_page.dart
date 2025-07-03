@@ -369,7 +369,7 @@ class _UserHomePageState extends State<UserHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              // Header Section
+// Header Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -378,30 +378,14 @@ class _UserHomePageState extends State<UserHomePage> {
                     style: const TextStyle(
                         fontSize: 22, fontWeight: FontWeight.w500),
                   ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to Inbox/Notifications
-                        },
-                        child: const CircleAvatar(
-                          radius: 24,
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.notifications_none, color: Colors
-                              .blue, size: 28),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        onTap: _logout, // Call the logout function
-                        child: const CircleAvatar(
-                          radius: 24,
-                          backgroundColor: Colors.red,
-                          child: Icon(Icons.logout, color: Colors.white,
-                              size: 20),
-                        ),
-                      ),
-                    ],
+                  GestureDetector(
+                    onTap: _logout, // Call the logout function
+                    child: const CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.red,
+                      child: Icon(Icons.logout, color: Colors.white,
+                          size: 20),
+                    ),
                   ),
                 ],
               ),

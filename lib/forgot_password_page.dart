@@ -14,29 +14,48 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   bool isLoading = false;
 
   Future<void> _sendResetEmail() async {
-    if (!_formKey.currentState!.validate()) return;
+    final email = emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showErrorSnackbar('Please enter your email');
+      return;
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _showErrorSnackbar('Enter a valid email address');
+      return;
+    }
 
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text.trim());
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Password reset email sent!")),
+          const SnackBar(
+            content: Text("Password reset email sent!"),
+            backgroundColor: Colors.green,
+          ),
         );
-        Navigator.pop(context); // Go back to login screen
+        Navigator.pop(context);
       }
     } on FirebaseAuthException catch (e) {
       String message = "Something went wrong";
       if (e.code == 'user-not-found') {
         message = "No user found with this email.";
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showErrorSnackbar(message);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -101,15 +120,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.all(16),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                          return 'Enter a valid email address';
-                        }
-                        return null;
-                      },
                     ),
                   ),
                 ),

@@ -468,23 +468,6 @@ class _AppointmentHistoryPageState extends State<AppointmentHistoryPage>
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  // Navigate to chat or message
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.blue.shade600,
-                    size: 20,
-                  ),
-                ),
-              ),
             ],
           ),
           if (showCancelButton) ...[
