@@ -96,7 +96,7 @@ class _DoctorContactPageState extends State<DoctorContactPage> {
                 const ListTile(
                   leading: Icon(Icons.email, color: Colors.blue),
                   title: Text('Email'),
-                  subtitle: Text('support@clinicapp.my'),
+                  subtitle: Text('support@healthconnect.my'),
                 ),
                 const ListTile(
                   leading: Icon(Icons.location_on, color: Colors.blue),

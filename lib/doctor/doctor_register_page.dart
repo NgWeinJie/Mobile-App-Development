@@ -106,7 +106,6 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
     final doctorId = doctorIdController.text.trim();
 
     try {
-      // Check if doctorId exists
       final existing = await FirebaseFirestore.instance
           .collection('doctors')
           .where('doctorId', isEqualTo: doctorId)
@@ -154,7 +153,6 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
         "Sunday": [],
       };
 
-      // Save doctor data with default weeklySessions
       await FirebaseFirestore.instance.collection('doctors').doc(userCredential.user!.uid).set({
         'doctorId': doctorId,
         'name': nameController.text.trim(),
