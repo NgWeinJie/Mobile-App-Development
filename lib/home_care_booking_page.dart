@@ -294,7 +294,6 @@ class _HomeCareBookingPageState extends State<HomeCareBookingPage> {
           nurseData: modifiedNurseData,
           selectedDate: selectedDates.first, // Pass first date for compatibility
           selectedTimeSlot: 'Full Day',
-          isHomeCare: true,
         ),
       ),
     );

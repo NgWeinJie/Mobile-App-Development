@@ -14,7 +14,6 @@ class PaymentPage extends StatefulWidget {
   final Map<String, dynamic> patientDetails;
   final DateTime selectedDate;
   final String selectedTimeSlot;
-  final bool isHomeCare;
 
   const PaymentPage({
     Key? key,
@@ -23,7 +22,6 @@ class PaymentPage extends StatefulWidget {
     required this.patientDetails,
     required this.selectedDate,
     required this.selectedTimeSlot,
-    this.isHomeCare = false,
   }) : super(key: key);
 
   @override
@@ -88,7 +86,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
   // Calculate totals
   double get servicePrice {
-    if (widget.isHomeCare && widget.nurseData['selectedDates'] != null) {
+    if (widget.nurseData['selectedDates'] != null) {
       final selectedDates = widget.nurseData['selectedDates'] as List;
       final pricePerDay = (widget.nurseData['price'] ?? 0).toDouble();
       return pricePerDay * selectedDates.length;
@@ -100,7 +98,7 @@ class _PaymentPageState extends State<PaymentPage> {
   double get totalAmount => servicePrice + transportationFee;
 
   int get totalDays {
-    if (widget.isHomeCare && widget.nurseData['selectedDates'] != null) {
+    if (widget.nurseData['selectedDates'] != null) {
       final selectedDates = widget.nurseData['selectedDates'] as List;
       return selectedDates.length;
     }
@@ -594,7 +592,7 @@ class _PaymentPageState extends State<PaymentPage> {
       'transportationFee': transportationFee,
       'totalAmount': totalAmount,
       'status': 'confirmed',
-      'serviceType': widget.isHomeCare ? 'home_care' : 'clinic',
+      'serviceType': 'home_care',
       'patientDetails': widget.patientDetails,
       'paymentDetails': {
         'transactionId': transactionId,
@@ -606,7 +604,7 @@ class _PaymentPageState extends State<PaymentPage> {
       'createdAt': FieldValue.serverTimestamp(),
     };
 
-    if (widget.isHomeCare && widget.nurseData['selectedDates'] != null) {
+    if (widget.nurseData['selectedDates'] != null) {
       bookingData['selectedDates'] = widget.nurseData['selectedDates'];
       bookingData['totalDays'] = totalDays;
     }
@@ -655,10 +653,8 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  widget.isHomeCare
-                      ? 'Your Home Care Booking is Confirmed'
-                      : 'Your Appointment is Confirmed',
+                const Text(
+                  'Your Home Care Booking is Confirmed',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 16,
@@ -710,7 +706,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(widget.isHomeCare ? 'Start Date:' : 'Appointment Date:'),
+                          const Text('Start Date:'),
                           Text(
                             '${widget.selectedDate.day}/${widget.selectedDate.month}/${widget.selectedDate.year}',
                             style: const TextStyle(
@@ -721,7 +717,6 @@ class _PaymentPageState extends State<PaymentPage> {
                       ),
 
                       // Duration for home care
-                      if (widget.isHomeCare) ...[
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -735,7 +730,6 @@ class _PaymentPageState extends State<PaymentPage> {
                             ),
                           ],
                         ),
-                      ],
 
                       const SizedBox(height: 12),
                       const Divider(thickness: 1),
@@ -1318,7 +1312,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                       color: Colors.grey.shade600,
                                     ),
                                   ),
-                                  if (widget.isHomeCare && totalDays > 1)
+                                  if (totalDays > 1)
                                     Text(
                                       '$totalDays days service',
                                       style: TextStyle(
@@ -1346,7 +1340,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    widget.isHomeCare && totalDays > 1
+                                    totalDays > 1
                                         ? 'Service (${totalDays} days)'
                                         : 'Service Fee',
                                   ),

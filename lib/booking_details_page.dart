@@ -9,7 +9,6 @@ class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> nurseData;
   final DateTime selectedDate;
   final String selectedTimeSlot;
-  final bool isHomeCare;
 
   const BookingDetailsPage({
     super.key,
@@ -17,7 +16,6 @@ class BookingDetailsPage extends StatefulWidget {
     required this.nurseData,
     required this.selectedDate,
     required this.selectedTimeSlot,
-    this.isHomeCare = false,
   });
 
   @override
@@ -177,7 +175,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       }
 
       // Only fetch from appointments if no booking data found for home care
-      if (patients.isEmpty || !widget.isHomeCare) {
+      if (patients.isEmpty) {
         final appointmentsSnapshot = await _firestore
             .collection('appointments')
             .where('userId', isEqualTo: user.uid)
@@ -217,18 +215,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       _mobileController.text = patient['mobile'] ?? '';
       _emailController.text = patient['email'] ?? '';
       _selectedGender = patient['gender'] ?? 'Male';
+      _addressLine1Controller.text = patient['addressLine1'] ?? '';
+      _addressLine2Controller.text = patient['addressLine2'] ?? '';
+      _postcodeController.text = patient['postcode'] ?? '';
+      _selectedArea = patient['area'] ?? 'Select Area';
 
-      // Fill address details for home care
-      if (widget.isHomeCare) {
-        _addressLine1Controller.text = patient['addressLine1'] ?? '';
-        _addressLine2Controller.text = patient['addressLine2'] ?? '';
-        _postcodeController.text = patient['postcode'] ?? '';
-        _selectedArea = patient['area'] ?? 'Select Area';
-
-        // Fallback to old address field if new fields are empty
-        if (_addressLine1Controller.text.isEmpty && patient['address'] != null) {
-          _addressLine1Controller.text = patient['address'];
-        }
+      // Fallback to old address field if new fields are empty
+      if (_addressLine1Controller.text.isEmpty && patient['address'] != null) {
+        _addressLine1Controller.text = patient['address'];
       }
 
       // Parse birth date
@@ -260,24 +254,17 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   }
 
   bool _isFormValid() {
-    bool basicValid = _nricController.text.isNotEmpty &&
+    return _nricController.text.isNotEmpty &&
         _nameController.text.isNotEmpty &&
         _mobileController.text.isNotEmpty &&
         _emailController.text.isNotEmpty &&
         _selectedDay != 'Day' &&
         _selectedMonth != 'Month' &&
-        _selectedYear != 'Year';
-
-    // For home care, detailed address fields are required
-    if (widget.isHomeCare) {
-      basicValid = basicValid &&
-          _addressLine1Controller.text.isNotEmpty &&
-          _postcodeController.text.isNotEmpty &&
-          _selectedArea != 'Select Area';
+        _selectedYear != 'Year' &&
+        _addressLine1Controller.text.isNotEmpty &&
+        _postcodeController.text.isNotEmpty &&
+        _selectedArea != 'Select Area';
     }
-
-    return basicValid;
-  }
 
   Future<void> _saveBooking() async {
     if (!_formKey.currentState!.validate() || !_isFormValid()) {
@@ -321,20 +308,18 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       };
 
       // Add detailed address for home care
-      if (widget.isHomeCare) {
-        patientDetails['addressLine1'] = _addressLine1Controller.text.trim();
-        patientDetails['addressLine2'] = _addressLine2Controller.text.trim();
-        patientDetails['postcode'] = _postcodeController.text.trim();
-        patientDetails['area'] = _selectedArea;
+      patientDetails['addressLine1'] = _addressLine1Controller.text.trim();
+      patientDetails['addressLine2'] = _addressLine2Controller.text.trim();
+      patientDetails['postcode'] = _postcodeController.text.trim();
+      patientDetails['area'] = _selectedArea;
 
-        // Create full address string for backward compatibility
-        String fullAddress = _addressLine1Controller.text.trim();
-        if (_addressLine2Controller.text.isNotEmpty) {
-          fullAddress += ', ${_addressLine2Controller.text.trim()}';
-        }
-        fullAddress += ', ${_postcodeController.text.trim()} $_selectedArea, Penang';
-        patientDetails['address'] = fullAddress;
+      // Create full address string for backward compatibility
+      String fullAddress = _addressLine1Controller.text.trim();
+      if (_addressLine2Controller.text.isNotEmpty) {
+        fullAddress += ', ${_addressLine2Controller.text.trim()}';
       }
+      fullAddress += ', ${_postcodeController.text.trim()} $_selectedArea, Penang';
+      patientDetails['address'] = fullAddress;
 
       setState(() {
         _isLoading = false;
@@ -350,7 +335,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             patientDetails: patientDetails,
             selectedDate: widget.selectedDate,
             selectedTimeSlot: widget.selectedTimeSlot,
-            isHomeCare: widget.isHomeCare,
           ),
         ),
       );
@@ -411,20 +395,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  widget.isHomeCare
-                      ? 'Your Home Care Booking Successful'
-                      : 'Your Appointment Successful',
-                  style: const TextStyle(
+                const Text(
+                  'Your Home Care Booking Successful',
+                  style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  widget.isHomeCare
-                      ? 'You booked a home care service with ${widget.nurseData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} for ${widget.selectedTimeSlot}'
-                      : 'You booked an appointment with Dr. ${widget.nurseData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} at ${widget.selectedTimeSlot}',
+                  'You booked a home care service with ${widget.nurseData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} for ${widget.selectedTimeSlot}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,
@@ -542,9 +522,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       children: [
         const SizedBox(height: 16),
         Text(
-          widget.isHomeCare
-              ? 'Have you made a booking before?'
-              : 'Have you made an appointment before?',
+          'Have you made a booking before?',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -749,9 +727,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           onTap: () => Navigator.pop(context),
           child: const Icon(Icons.arrow_back_ios, color: Colors.black),
         ),
-        title: Text(
-          widget.isHomeCare ? 'Patient Details' : 'Patient Details',
-          style: const TextStyle(
+        title: const Text(
+          'Patient Details',
+          style: TextStyle(
             color: Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -999,7 +977,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                       ),
 
                       // Detailed address fields for home care (Penang only)
-                      if (widget.isHomeCare) _buildDetailedAddressFields(),
+                      _buildDetailedAddressFields(),
                     ],
                   ),
                 ),
