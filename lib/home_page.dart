@@ -128,7 +128,7 @@ class _UserHomePageState extends State<UserHomePage> {
     }
   }
 
-  // Search doctors function - Modified to search only by doctor name
+  // Search doctors function
   Future<void> _searchDoctors(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -400,7 +400,7 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               const SizedBox(height: 20),
 
-              // Search Bar - Updated with centered hint text
+              // Search Bar
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
