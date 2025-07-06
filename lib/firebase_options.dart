@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -30,17 +27,17 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
         throw UnsupportedError(
@@ -65,4 +62,14 @@ class DefaultFirebaseOptions {
     storageBucket: 'mobile-app-development-78ac2.firebasestorage.app',
     iosBundleId: 'inti.edu.mobileAppDevelopment',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAX8I9Qbv2RZGB9QMkNlqFcRWEAPCG65LM',
+    appId: '1:420055386320:ios:ca74f99eedfa8bd77176d5',
+    messagingSenderId: '420055386320',
+    projectId: 'mobile-app-development-78ac2',
+    storageBucket: 'mobile-app-development-78ac2.firebasestorage.app',
+    iosBundleId: 'inti.edu.mobileAppDevelopment',
+  );
+
 }
