@@ -80,7 +80,7 @@ class _DoctorLoginPageState extends State<DoctorLoginPage> {
         Navigator.of(context).pushNamedAndRemoveUntil('/doctorHome', (route) => false);
       }
     } on FirebaseAuthException catch (e) {
-      String message = 'Login failed';
+      String message = 'Wrong password provided. Please check your password.';
       if (e.code == 'user-not-found') {
         message = e.message ?? 'No user found.';
       } else if (e.code == 'wrong-password') {

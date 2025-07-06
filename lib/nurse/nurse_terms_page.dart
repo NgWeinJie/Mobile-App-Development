@@ -20,7 +20,7 @@ class NurseTermsPage extends StatelessWidget {
               children: const [
                 TextSpan(
                   text:
-                  'Welcome to the Nurse Portal of the Clinic App. By accessing and using this application, you agree to the following terms and conditions:\n\n',
+                  'Welcome to the Nurse Portal of the HealthConnect App. By accessing and using this application, you agree to the following terms and conditions:\n\n',
                 ),
                 TextSpan(
                   text: '1. Purpose of Use\n',
