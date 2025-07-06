@@ -77,7 +77,7 @@ class _NurseLoginPageState extends State<NurseLoginPage> {
         Navigator.of(context).pushNamedAndRemoveUntil('/nurseHome', (route) => false);
       }
     } on FirebaseAuthException catch (e) {
-      String message = 'Login failed';
+      String message = 'Wrong password provided. Please check your password.';
       if (e.code == 'user-not-found') {
         message = e.message ?? 'No user found.';
       } else if (e.code == 'wrong-password') {

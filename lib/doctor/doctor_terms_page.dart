@@ -20,7 +20,7 @@ class DoctorTermsPage extends StatelessWidget {
               children: [
                 TextSpan(
                   text:
-                  'Welcome to the Doctor Portal of the Clinic App. By accessing and using this application, you agree to the following terms and conditions:\n\n',
+                  'Welcome to the Doctor Portal of the HealthConnect App. By accessing and using this application, you agree to the following terms and conditions:\n\n',
                 ),
                 TextSpan(text: 'Purpose of Use\n\n', style: TextStyle(fontWeight: FontWeight.bold)),
                 TextSpan(
