@@ -5,16 +5,16 @@ import 'package:intl/intl.dart';
 import 'payment_page.dart';
 
 class BookingDetailsPage extends StatefulWidget {
-  final String doctorId;
-  final Map<String, dynamic> doctorData;
+  final String nurseId;
+  final Map<String, dynamic> nurseData;
   final DateTime selectedDate;
   final String selectedTimeSlot;
   final bool isHomeCare;
 
   const BookingDetailsPage({
     super.key,
-    required this.doctorId,
-    required this.doctorData,
+    required this.nurseId,
+    required this.nurseData,
     required this.selectedDate,
     required this.selectedTimeSlot,
     this.isHomeCare = false,
@@ -345,8 +345,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         context,
         MaterialPageRoute(
           builder: (context) => PaymentPage(
-            doctorId: widget.doctorId,
-            doctorData: widget.doctorData,
+            nurseId: widget.nurseId,
+            nurseData: widget.nurseData,
             patientDetails: patientDetails,
             selectedDate: widget.selectedDate,
             selectedTimeSlot: widget.selectedTimeSlot,
@@ -423,8 +423,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                 const SizedBox(height: 16),
                 Text(
                   widget.isHomeCare
-                      ? 'You booked a home care service with ${widget.doctorData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} for ${widget.selectedTimeSlot}'
-                      : 'You booked an appointment with Dr. ${widget.doctorData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} at ${widget.selectedTimeSlot}',
+                      ? 'You booked a home care service with ${widget.nurseData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} for ${widget.selectedTimeSlot}'
+                      : 'You booked an appointment with Dr. ${widget.nurseData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} at ${widget.selectedTimeSlot}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,

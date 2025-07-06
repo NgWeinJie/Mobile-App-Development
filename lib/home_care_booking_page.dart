@@ -279,10 +279,6 @@ class _HomeCareBookingPageState extends State<HomeCareBookingPage> {
       return;
     }
 
-    // For multiple dates, we'll need to create multiple bookings
-    // For now, we'll pass the first date and handle multiple dates in the booking process
-    // You may need to modify BookingDetailsPage to handle multiple dates
-
     // Create a modified nurseData with selected dates info
     final modifiedNurseData = Map<String, dynamic>.from(widget.nurseData);
     modifiedNurseData['selectedDates'] = selectedDates.map((date) => DateFormat('yyyy-MM-dd').format(date)).toList();
@@ -294,8 +290,8 @@ class _HomeCareBookingPageState extends State<HomeCareBookingPage> {
       context,
       MaterialPageRoute(
         builder: (context) => BookingDetailsPage(
-          doctorId: widget.nurseId,
-          doctorData: modifiedNurseData,
+          nurseId: widget.nurseId,
+          nurseData: modifiedNurseData,
           selectedDate: selectedDates.first, // Pass first date for compatibility
           selectedTimeSlot: 'Full Day',
           isHomeCare: true,

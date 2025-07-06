@@ -63,32 +63,26 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
         final data = doc.data();
         data['id'] = doc.id;
 
-        final status = data['status'] as String;
+        // Get the earliest date from selectedDates array
+        final selectedDates = data['selectedDates'] as List<dynamic>?;
+        DateTime? earliestDate;
 
-        // Only include non-cancelled bookings
-        if (status != 'cancelled') {
-          // Get the earliest date from selectedDates array
-          final selectedDates = data['selectedDates'] as List<dynamic>?;
-          DateTime? earliestDate;
+        if (selectedDates != null && selectedDates.isNotEmpty) {
+          // Parse all dates and find the earliest one
+          final dates = selectedDates
+              .map((dateStr) => DateTime.parse(dateStr as String))
+              .toList();
+          dates.sort();
+          earliestDate = dates.first;
+        } else {
+          // Skip this booking if no selectedDates available
+          continue;
+        }
 
-          if (selectedDates != null && selectedDates.isNotEmpty) {
-            // Parse all dates and find the earliest one
-            final dates = selectedDates
-                .map((dateStr) => DateTime.parse(dateStr as String))
-                .toList();
-            dates.sort();
-            earliestDate = dates.first;
-          } else {
-            // Skip this booking if no selectedDates available
-            continue;
-          }
-
-          if (earliestDate.isAfter(today) ||
-              (earliestDate.isAtSameMomentAs(today) && status == 'confirmed')) {
-            upcoming.add(data);
-          } else {
-            history.add(data);
-          }
+        if (earliestDate.isAfter(today) || earliestDate.isAtSameMomentAs(today)) {
+          upcoming.add(data);
+        } else {
+          history.add(data);
         }
       }
 
@@ -172,21 +166,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return Colors.blue;
-      case 'pending':
-        return Colors.orange;
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
   String _getFormattedDates(Map<String, dynamic> booking) {
     final selectedDates = booking['selectedDates'] as List<dynamic>?;
 
@@ -238,7 +217,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
     final timeSlot = booking['timeSlot'] as String;
     final nurseImageUrl = booking['nurseImg'] as String?;
     final serviceType = booking['serviceType'] as String? ?? 'home_care';
-    final status = booking['status'] as String? ?? 'pending';
+    final status = booking['status'] as String? ?? 'confirmed';
     final totalDays = booking['totalDays'] as int? ?? 1;
     final totalAmount = booking['totalAmount'] as num? ?? 0;
 
@@ -314,13 +293,13 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(status).withOpacity(0.1),
+                  color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   status.toUpperCase(),
-                  style: TextStyle(
-                    color: _getStatusColor(status),
+                  style: const TextStyle(
+                    color: Colors.blue,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -450,6 +429,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
         final selectedDates = booking['selectedDates'] as List<dynamic>?;
         final patientDetails = booking['patientDetails'] as Map<String, dynamic>?;
         final paymentDetails = booking['paymentDetails'] as Map<String, dynamic>?;
+        final status = booking['status'] as String? ?? 'confirmed';
 
         String formattedDateDisplay = '';
         if (selectedDates != null && selectedDates.isNotEmpty) {
@@ -628,13 +608,13 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(booking['status'] ?? 'pending').withOpacity(0.1),
+                          color: Colors.blue.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          (booking['status'] ?? 'pending').toUpperCase(),
-                          style: TextStyle(
-                            color: _getStatusColor(booking['status'] ?? 'pending'),
+                          status.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.blue,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),

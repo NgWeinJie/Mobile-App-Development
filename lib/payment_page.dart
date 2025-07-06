@@ -9,8 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PaymentPage extends StatefulWidget {
-  final String doctorId;
-  final Map<String, dynamic> doctorData;
+  final String nurseId;
+  final Map<String, dynamic> nurseData;
   final Map<String, dynamic> patientDetails;
   final DateTime selectedDate;
   final String selectedTimeSlot;
@@ -18,8 +18,8 @@ class PaymentPage extends StatefulWidget {
 
   const PaymentPage({
     Key? key,
-    required this.doctorId,
-    required this.doctorData,
+    required this.nurseId,
+    required this.nurseData,
     required this.patientDetails,
     required this.selectedDate,
     required this.selectedTimeSlot,
@@ -88,20 +88,20 @@ class _PaymentPageState extends State<PaymentPage> {
 
   // Calculate totals
   double get servicePrice {
-    if (widget.isHomeCare && widget.doctorData['selectedDates'] != null) {
-      final selectedDates = widget.doctorData['selectedDates'] as List;
-      final pricePerDay = (widget.doctorData['price'] ?? 0).toDouble();
+    if (widget.isHomeCare && widget.nurseData['selectedDates'] != null) {
+      final selectedDates = widget.nurseData['selectedDates'] as List;
+      final pricePerDay = (widget.nurseData['price'] ?? 0).toDouble();
       return pricePerDay * selectedDates.length;
     }
-    return (widget.doctorData['price'] ?? 0).toDouble();
+    return (widget.nurseData['price'] ?? 0).toDouble();
   }
 
   double get transportationFee => 20.0;
   double get totalAmount => servicePrice + transportationFee;
 
   int get totalDays {
-    if (widget.isHomeCare && widget.doctorData['selectedDates'] != null) {
-      final selectedDates = widget.doctorData['selectedDates'] as List;
+    if (widget.isHomeCare && widget.nurseData['selectedDates'] != null) {
+      final selectedDates = widget.nurseData['selectedDates'] as List;
       return selectedDates.length;
     }
     return 1;
@@ -209,7 +209,7 @@ class _PaymentPageState extends State<PaymentPage> {
             'to_name': widget.patientDetails['name'] ?? 'Patient',
             'otp_code': _generatedOtp,
             'amount': totalAmount.toStringAsFixed(2),
-            'doctor_name': widget.doctorData['name'] ?? 'Doctor',
+            'nurse_name': widget.nurseData['name'] ?? 'nurse',
           },
         }),
       );
@@ -242,7 +242,7 @@ class _PaymentPageState extends State<PaymentPage> {
           'amount': amount.toString(),
           'currency': 'myr',
           'payment_method_types[]': 'card',
-          'metadata[doctor_id]': widget.doctorId,
+          'metadata[nurse_id]': widget.nurseId,
           'metadata[patient_name]': widget.patientDetails['name'] ?? '',
         },
       );
@@ -583,12 +583,12 @@ class _PaymentPageState extends State<PaymentPage> {
 
     final bookingData = {
       'userId': user.uid,
-      'nurseId': widget.doctorId,
-      'nurseName': widget.doctorData['name'],
-      'nurseSpecialization': widget.doctorData['specialization'],
-      'nurseHospital': widget.doctorData['hospital'],
-      'nurseImg': widget.doctorData['imageUrl'],
-      'nursePhone': widget.doctorData['phone'],
+      'nurseId': widget.nurseId,
+      'nurseName': widget.nurseData['name'],
+      'nurseSpecialization': widget.nurseData['specialization'],
+      'nurseHospital': widget.nurseData['hospital'],
+      'nurseImg': widget.nurseData['imageUrl'],
+      'nursePhone': widget.nurseData['phone'],
       'timeSlot': widget.selectedTimeSlot,
       'price': servicePrice,
       'transportationFee': transportationFee,
@@ -606,8 +606,8 @@ class _PaymentPageState extends State<PaymentPage> {
       'createdAt': FieldValue.serverTimestamp(),
     };
 
-    if (widget.isHomeCare && widget.doctorData['selectedDates'] != null) {
-      bookingData['selectedDates'] = widget.doctorData['selectedDates'];
+    if (widget.isHomeCare && widget.nurseData['selectedDates'] != null) {
+      bookingData['selectedDates'] = widget.nurseData['selectedDates'];
       bookingData['totalDays'] = totalDays;
     }
 
@@ -666,7 +666,8 @@ class _PaymentPageState extends State<PaymentPage> {
                     height: 1.3,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
+
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -675,39 +676,106 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                   child: Column(
                     children: [
+                      // nurse/Nurse Details
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total Paid:'),
+                          const Text('Healthcare Provider:'),
+                          Text(
+                            widget.nurseData['name'] ?? 'Unknown',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Specialization
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Specialization:'),
+                          Text(
+                            widget.nurseData['specialization'] ?? 'General',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Date
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(widget.isHomeCare ? 'Start Date:' : 'Appointment Date:'),
+                          Text(
+                            '${widget.selectedDate.day}/${widget.selectedDate.month}/${widget.selectedDate.year}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Duration for home care
+                      if (widget.isHomeCare) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Duration:'),
+                            Text(
+                              '$totalDays days',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      const SizedBox(height: 12),
+                      const Divider(thickness: 1),
+                      const SizedBox(height: 8),
+
+                      // Total Amount
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total Paid:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           Text(
                             'RM ${totalAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                               color: Colors.green,
                             ),
                           ),
                         ],
                       ),
-                      if (widget.isHomeCare && totalDays > 1)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Duration:'),
-                            Text('$totalDays days'),
-                          ],
-                        ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        '/userHome',
+                            (route) => false,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
@@ -1211,12 +1279,12 @@ class _PaymentPageState extends State<PaymentPage> {
                                 borderRadius: BorderRadius.circular(12),
                                 color: Colors.grey.shade200,
                               ),
-                              child: widget.doctorData['imageUrl'] != null &&
-                                  widget.doctorData['imageUrl'].isNotEmpty
+                              child: widget.nurseData['imageUrl'] != null &&
+                                  widget.nurseData['imageUrl'].isNotEmpty
                                   ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  widget.doctorData['imageUrl'],
+                                  widget.nurseData['imageUrl'],
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Icon(
@@ -1237,14 +1305,14 @@ class _PaymentPageState extends State<PaymentPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.doctorData['name'] ?? 'Unknown',
+                                    widget.nurseData['name'] ?? 'Unknown',
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   Text(
-                                    widget.doctorData['specialization'] ?? '',
+                                    widget.nurseData['specialization'] ?? '',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey.shade600,

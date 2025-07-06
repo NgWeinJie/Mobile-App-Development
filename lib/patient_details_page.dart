@@ -264,6 +264,7 @@ class _PatientDetailsPageState extends State<PatientDetailsPage> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -272,53 +273,93 @@ class _PatientDetailsPageState extends State<PatientDetailsPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Success Icon
                 Container(
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: Colors.green.shade50,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.thumb_up,
+                    Icons.check_circle,
                     size: 40,
-                    color: Colors.blue,
+                    color: Colors.green,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+
+                // Title
                 const Text(
-                  'Thank You !',
+                  'Appointment Successful!',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
+
+                // Subtitle
                 const Text(
-                  'Your Appointment Successful',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'You booked an appointment with ${widget.doctorData['name']} on ${DateFormat('MMMM d').format(widget.selectedDate)} at ${widget.selectedTimeSlot}',
+                  'Your Appointment is Confirmed',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: 15,
                     color: Colors.grey,
+                    height: 1.3,
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Details Container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailRow('Doctor', widget.doctorData['name'] ?? 'Unknown'),
+                      const SizedBox(height: 16),
+                      _buildDetailRow('Specialization', widget.doctorData['specialization'] ?? 'General'),
+                      const SizedBox(height: 16),
+                      _buildDetailRow('Hospital', widget.doctorData['hospital'] ?? 'Unknown'),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDetailRow('Date', '${widget.selectedDate.day}/${widget.selectedDate.month}/${widget.selectedDate.year}'),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: _buildDetailRow('Time', widget.selectedTimeSlot),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDetailRow('Patient', _nameController.text),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Done Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop(); // Close dialog
-                      Navigator.of(context).pop(); // Go back to previous screen
-                      Navigator.of(context).pop(); // Go back to appointments list
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        '/userHome',
+                            (Route<dynamic> route) => false,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
@@ -346,6 +387,32 @@ class _PatientDetailsPageState extends State<PatientDetailsPage> {
     );
   }
 
+  Widget _buildDetailRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+        ),
+      ],
+    );
+  }
   Widget _buildDropdown({
     required String value,
     required List<String> items,
