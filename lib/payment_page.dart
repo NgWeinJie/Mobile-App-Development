@@ -1116,8 +1116,8 @@ class _PaymentPageState extends State<PaymentPage> {
                               final otpSent = await _sendOtpViaEmail();
                               if (otpSent) {
                                 _showSuccessSnackBar('OTP has been resent to your email successfully!');
-                                // Generate new OTP for the resend
-                                _generatedOtp = _generateOtp();
+                                // Clear the OTP input field for new OTP entry
+                                _otpController.clear();
                               } else {
                                 _showErrorSnackBar('Failed to resend OTP. Please try again.');
                               }

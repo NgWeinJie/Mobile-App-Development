@@ -15,6 +15,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _agreeToTerms = false;
@@ -25,6 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -66,6 +68,16 @@ class _RegisterPageState extends State<RegisterPage> {
     }
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(_emailController.text)) {
       _showErrorSnackBar('Please enter a valid email address');
+      return false;
+    }
+
+    // Validate Phone
+    if (_phoneController.text.isEmpty) {
+      _showErrorSnackBar('Please enter your phone number');
+      return false;
+    }
+    if (!RegExp(r'^(\+?6?01)[0-9]-*[0-9]{7,8}$').hasMatch(_phoneController.text.replaceAll(RegExp(r'[\s-]'), ''))) {
+      _showErrorSnackBar('Please enter a valid Malaysian phone number');
       return false;
     }
 
@@ -116,6 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -233,6 +246,14 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _emailController,
                             hintText: 'Email',
                             keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Phone Number field
+                          _buildTextField(
+                            controller: _phoneController,
+                            hintText: 'Phone Number',
+                            keyboardType: TextInputType.phone,
                           ),
                           const SizedBox(height: 16),
 

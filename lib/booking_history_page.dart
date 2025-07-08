@@ -155,17 +155,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
     }
   }
 
-  String _getServiceTypeDisplay(String serviceType) {
-    switch (serviceType) {
-      case 'home_care':
-        return 'Home Care';
-      case 'clinic':
-        return 'Clinic Visit';
-      default:
-        return 'Service';
-    }
-  }
-
   String _getFormattedDates(Map<String, dynamic> booking) {
     final selectedDates = booking['selectedDates'] as List<dynamic>?;
 
@@ -277,12 +266,15 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                           color: Colors.grey.shade600,
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        Expanded(
+                          child: Text(
                           '$formattedDate | $timeSlot',
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 12,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         ),
                       ],
                     ),
@@ -325,7 +317,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _getServiceTypeDisplay(serviceType),
+                      'Home Care',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -521,7 +513,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                   const SizedBox(height: 16),
 
                   // Booking Information
-                  _buildDetailRow('Service Type', _getServiceTypeDisplay(booking['serviceType'] ?? 'home_care')),
+                  _buildDetailRow('Service Type', 'Home Care'),
                   _buildDetailRow('Date', formattedDateDisplay),
                   _buildDetailRow('Time', booking['timeSlot'] ?? 'Not specified'),
 
